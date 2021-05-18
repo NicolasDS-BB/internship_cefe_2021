@@ -13,12 +13,13 @@
 import time
 t0 = time.time()
 import os
+from tensorflow.keras.preprocessing.image import load_img
 import csv
 import keract  # low to import
 import numpy as np
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
-from tensorflow.keras.preprocessing.image import load_img
+
 from numpy.linalg import norm
 import pandas
 import statistics as st
