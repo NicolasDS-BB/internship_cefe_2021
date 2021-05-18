@@ -75,10 +75,10 @@ dict_labels = {}
 #####################################################################################
 # CODE:
 #####################################################################################
-#compute_norm_activations(model,flatten_layers, images_path,dict_channel_norms, layers, 'channel', 'L1')
-spl.compute_norm_activations(model,flatten_layers, images_path, dict_flatten_norms, layers, 'flatten', 'gini')
-#compute_norm_activations(model,flatten_layers, images_path,dict_channel_TR, layers, 'channel', 'treve-rolls') #extrèmement lent même sur le test
-#compute_norm_activations(model,flatten_layers, images_path, dict_flatten_TR, layers, 'flatten', 'treve-rolls')
+#spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_channel_norms, layers, 'channel', 'L1')
+spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path, dict_flatten_norms, layers, 'flatten', 'gini')
+#spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_channel_TR, layers, 'channel', 'treve-rolls') #extrèmement lent même sur le test
+#spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path, dict_flatten_TR, layers, 'flatten', 'treve-rolls')
 
 spl.parse_rates(labels_path, dict_labels)
 

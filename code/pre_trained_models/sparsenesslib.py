@@ -1,3 +1,12 @@
+# gini(vector)
+# treve_rolls(vector)
+# compute_flatten(activations, activations_dict,layer,formula)
+# def compute_channel(activations, activations_dict,layer,formula)
+# compute_norm_activations(model, flatten_layers, path, dict_output, layers, computation, formula)
+# def parse_rates(labels_path , dict_labels)
+# def create_dataframe(dict_rates, dict_norm)
+
+
 #####################################################################################
 # LIBRAIRIES:
 #####################################################################################
@@ -14,7 +23,7 @@ from numpy.linalg import norm
 import pandas
 import statistics as st
 #####################################################################################
-# PROCEDURE:
+# PROCEDURES/FUNCTIONS:
 #####################################################################################
 def gini(vector):
     """Calculate the Gini coefficient of a numpy array."""
@@ -47,6 +56,9 @@ def treves_rolls(vector):
     return tr 
 ####################################################/length#################################
 def compute_flatten(activations, activations_dict,layer,formula):
+    '''
+    Create a flatten vector from each layer and compute chosen formula (gini, treve-rolls, l1 norm...) on it"
+    '''
     arr = activations[layer].flatten()
     if formula == 'L1':    
         activations_dict[layer] = (norm(arr, 1))        
@@ -56,6 +68,9 @@ def compute_flatten(activations, activations_dict,layer,formula):
         activations_dict[layer] = (gini(arr))
 #####################################################################################
 def compute_channel(activations, activations_dict,layer,formula):
+    '''
+    Compute chosen formula (gini, treve-rolls, l1 norm...)
+    '''
     channels = []
     index_row = 0
     for row in activations[layer][0]:
@@ -74,7 +89,20 @@ def compute_channel(activations, activations_dict,layer,formula):
         index_row += 1    
     activations_dict[layer] = st.mean(channels)
 #####################################################################################
-def compute_norm_activations(model, flatten_layers, path, dict_output, layers, computation, formula):
+def compute_activations(layers, flatten_layers, computation, activations, activations_dict,formula):
+        
+        for layer in layers:            
+            if computation == 'channel':                
+                if layer in flatten_layers:
+                    compute_flatten(activations, activations_dict, layer,formula)       
+                else:                     
+                    compute_channel(activations, activations_dict, layer, formula)
+            elif computation == 'flatten':
+                compute_flatten(activations, activations_dict, layer, formula)            
+                
+            else: print('ERROR: computation setting isnt channel or flatten')
+#####################################################################################
+def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_output, layers, computation, formula):
     """
     compute the l1 norm of the layers given in the list *layers*
     of the images contained in the directory *path*
@@ -95,21 +123,9 @@ def compute_norm_activations(model, flatten_layers, path, dict_output, layers, c
         # récupération des activations
         activations = keract.get_activations(model, image)
         activations_dict = {}
-
-        for layer in layers:            
-            if computation == 'channel':                
-                if layer in flatten_layers:
-                    compute_flatten(activations, activations_dict, layer,formula)       
-                else:                     
-                    compute_channel(activations, activations_dict, layer, formula)
-            elif computation == 'flatten':
-                compute_flatten(activations, activations_dict, layer, formula)            
-                
-            else: print('ERROR: computation setting isnt channel or flatten')
-
+        compute_activations(layers, flatten_layers, computation, activations, activations_dict,formula)
         dict_output[each] = activations_dict
 #####################################################################################
-# on importe les notes de beauté/attractivité dans un dict {image.jpg:score}
 def parse_rates(labels_path , dict_labels):
     """
     Stores notes and image names contained in *path* 
