@@ -218,7 +218,6 @@ que c'est plus optimal qu'un dict dans ce cas précis, en terme de rapidité (je
 
 - lectures 2 publis:
 	+ kriegeskorte
-	+ ? 
 	+ Putative ratio: pas convaincant, ne considère pas le images en général mais seulement les rations l/L de quelques rectangles
 
 - création de sous dossier sur le repo zotero
@@ -300,22 +299,40 @@ que c'est plus optimal qu'un dict dans ce cas précis, en terme de rapidité (je
 	+ **TR** Graphe sur toutes les bdd (que mart et cfd) et tous les poids (un graphe rvalue, un graphe r2)
 	+ **comparaison** 2 graphe par bdd (r et r2) pour comparer L1 et TR
 
-
 # 18/04/2021
 
+- résolution du pb git: création d'un nouveau repo, perte des commits du coup. 
+- souci avec le pc gpu: souris/clavier non detectés + xfce met super longtemps à se lancer
+- création du fichier de labels pour jen
+- calcul des normes L1 avec jen
+- réunion avec Julien et Sonia
+- calcul vite fait de gini sur cfd: résultats bizarres
+- début d'un programme pour représenter les distributions
+
+# 19/04/2021
+
+ - préparation et envoi d'une candidature à une thèse
+
+ # 20/04/2021
+
+- PC GPU: la souris et le clavier ne sont reconnus qu'en root sous xfce, pas en utilisateur normal
 - 
 
 
+# TODO:
 
-TODO:
-- régler le souci avec git
+- EN PREMIER: distribution des activations pour une image donnée (une de chaque bdd, pour chaque poid), peut être pour normaliser
+- en plus de channel et flatten, calculer gini sur L*l pour chaque carte d'activation, puis en faire la moyenne
+- indice de gini et hoyer, et L0
+- les formules ne sont pas dorcément adaptées a chaque couches
+- faire des fonctions de graphiques
+- benchmark TR et L1 sur une BDD de sparse matrix
 - vérifier que la formule de TR choisie (la 2e de l'article) est vraiment mieux que la première
 - faut il corriger les pvalues? Correction de Bonferroni adaptée? (car tests non indépendants)
-- recoder Treve-Rolls avec reduce
-- faire un fichier de labels propres pour JEN
+- recoder Treve-Rolls avec reduce()
 - recoder preprocessed() avec tfdata (plus opti) et adapté au formats des images de JEN
 - appliquer les conseils de Rufin, cf livre de géron, cf réunion du 08/04
-- reproduire les résultats de la publi sur la complexité des imagees --> ou attendre que la coautrice les envoie comme elle s'y est engagée--> o
+- reproduire les résultats de la publi sur la complexité des imagees --> ou attendre que la coautrice les envoie comme elle s'y est engagée
 - Demander a alexandre des précisions sur la publi de Richard 2008 (erreur de recopiage de ma part?)
 - écouter:
 	+ https://avisdexperts.ch/videos/view/10980 
