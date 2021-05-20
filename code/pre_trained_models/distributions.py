@@ -87,9 +87,15 @@ def compute_sparseness_metrics_activations(model,path,layers):
     and store them in the dictionary *dict_output*.
     """
     imgs = [f for f in os.listdir(path)]    
-    i = 1
-    for each in imgs:        
-        i += 1
+    i = 0
+    
+
+    activations_dict = {}
+
+    for each in imgs:       
+        print('picture: ', i , '/', len(imgs)-1)         
+        i += 1      
+          
         img_path = path + "/" + each
         img = load_img(img_path, target_size=(224, 224))
         image = img_to_array(img)
@@ -98,12 +104,34 @@ def compute_sparseness_metrics_activations(model,path,layers):
         image = preprocess_input(img)
         # récupération des activations
         activations = keract.get_activations(model, image)
-        activations_dict = {}       
+             
         
-        for layer in layers:      
-            arr = activations[layer].flatten()       
-            seaborn.distplot(arr)  
-            plt.show()
+        for layer in layers:             
+                       
+            array = activations[layer].flatten()                                
+
+            if layer in activations_dict:                  
+                activations_dict[layer].append(array) 
+            else:                 
+                activations_dict[layer] = []
+                activations_dict[layer].append(array)
+    
+    
+    i = 1
+    length = len(activations_dict)
+    for each in activations_dict:
+        
+        print(i, "/",length)
+        i += 1
+
+        fusion = np.vstack(activations_dict[each])
+        print('fusion done')
+
+        plt.hist(fusion)
+        plt.title(layer, fontsize=10)     
+        plt.savefig(log_path +'_' + layer + 'graphe')
+
+
 ####################################################################################
 compute_sparseness_metrics_activations(model,images_path,layers)
 
