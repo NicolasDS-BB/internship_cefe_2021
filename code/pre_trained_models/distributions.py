@@ -6,7 +6,8 @@ import time
 t0 = time.time()
 from tensorflow.keras.applications.vgg16 import VGG16
 from keras_vggface.vggface import VGGFace
-from scipy.stats import linregress
+import scipy
+from scipy import stats
 import PIL
 import sys
 sys.path.insert(1,'../../code/functions')
@@ -15,51 +16,47 @@ import time
 t0 = time.time()
 import os
 from tensorflow.keras.preprocessing.image import load_img
-import csv
 import keract  # low to import
 import numpy as np
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
-import seaborn
-from numpy.linalg import norm
-import pandas
-import statistics as st
 import matplotlib.pyplot as plt
 #####################################################################################
 #SETTINGS:
 #####################################################################################
 PIL.Image.MAX_IMAGE_PIXELS = 30001515195151997 #useful for JEN bc images are heavy 
 478940                             
-bdd = 'SMALLTEST' #'CFD','SCUT-FBP','MART','JEN','SMALLTEST','BIGTEST'
+bdd = 'CFD' #'CFD','SCUT-FBP','MART','JEN','SMALLTEST','BIGTEST'
 model_name = 'VGG16'  # 'vgg16, resnet (...)'
 weights = 'imagenet' #'imagenet','vggface'
 computer = 'sonia'
 #####################################################################################
 if computer == 'sonia':
     if bdd == 'CFD':
-        labels_path ='../../data/redesigned/CFD/labels_CFD.csv'
-        images_path ='../../data/redesigned/CFD/images'
-        log_path ='../../data/redesigned/CFD/log_correlations_CFD'
+        labels_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/labels_CFD.csv'
+        images_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/images'
+        log_path ='../../results/CFD/log_CFD'
     elif bdd == 'JEN':
-        labels_path ='../../data/redesigned/JEN/labels_JEN.csv'
-        images_path ='../../data/redesigned/JEN/images'
-        log_path ='../../data/redesigned/JEN/log_correlations_JEN'
+        labels_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/labels_JEN.csv'
+        images_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/images'
+        log_path ='../../results/JEN/log_JEN'
     elif bdd == 'SCUT-FBP':
-        labels_path ='../../data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
-        images_path ='../../data/redesigned/SCUT-FBP/images'
-        log_path ='../../data/redesigned/SCUT-FBP/log_correlations_SCUT-FBP'
+        labels_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+        images_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/images'
+        log_path ='../../results/SCUT-FBP/log_SCUT-FBP'
     elif bdd == 'MART':
-        labels_path ='../../data/redesigned/MART/labels_MART.csv'
-        images_path ='../../data/redesigned/MART/images'
-        log_path ='../../data/redesigned/MART/log_correlations_MART'
+        labels_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/labels_MART.csv'
+        images_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/images'
+        log_path ='../../results/MART/log_MART'
     elif bdd == 'SMALLTEST':
         labels_path ='../../data/redesigned/small_test/labels_test.csv'
         images_path ='../../data/redesigned/small_test/images'
-        log_path ='../../data/redesigned/small_test/log_correlations_test'
+        log_path ='../../results/smalltest/log_test'
     elif bdd == 'BIGTEST':
-        labels_path ='../../data/redesigned/big_test/labels_bigtest.csv'
-        images_path ='../../data/redesigned/big_test/images'
-        log_path ='../../data/redesigned/big_test/log_correlations_bigtest'
+        
+        labels_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/labels_bigtest.csv'
+        images_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/images'
+        log_path ='../../results/bigtest/log_bigtest'
 
 elif computer == 'nicolas':
     if bdd == 'CFD':
@@ -110,28 +107,20 @@ elif model_name == 'resnet50':
     elif weights == 'vggfaces':
         print('error, model not configured')
 ####################################################################################
-def compute_sparseness_metrics_activations(model,path,layers):
+def distributions_activations_layers(model,path,layers):
     """
-    compute the l1 norm of the layers given in the list *layers*
-    of the images contained in the directory *path*
-    by one of those 2 modes: flatten or channel (cf previous functions)
-    and store them in the dictionary *dict_output*.
+    save a hist for activations values of each layers
     """
     imgs = [f for f in os.listdir(path)]    
-    i = 0
-    
 
     activations_dict = {}
 
     for each in imgs:       
-        print('picture: ', i , '/', len(imgs)-1)         
-        i += 1      
           
         img_path = path + "/" + each
         img = load_img(img_path, target_size=(224, 224))
         image = img_to_array(img)
-        img = image.reshape(
-            (1, image.shape[0], image.shape[1], image.shape[2]))  # ?
+        img = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
         image = preprocess_input(img)
         # récupération des activations
         activations = keract.get_activations(model, image)
@@ -145,25 +134,41 @@ def compute_sparseness_metrics_activations(model,path,layers):
                 activations_dict[layer].append(array) 
             else:                 
                 activations_dict[layer] = []
-                activations_dict[layer].append(array)
+                activations_dict[layer].append(array)    
     
     
-    i = 1
-    length = len(activations_dict)
-    for each in activations_dict:
-        
-        print(i, "/",length)
-        i += 1
-
-        fusion = np.vstack(activations_dict[each])
-        print('fusion done')
-
-        plt.hist(fusion)
-        plt.title(layer, fontsize=10)     
-        plt.savefig(log_path +'_' + layer + 'graphe')
-
+    for each in activations_dict: 
+        print(each)
+        fusion = (np.vstack(activations_dict[each])).flatten()    
+        print('1')    
+        kurt = scipy.stats.kurtosis(fusion)
+        print('2')    
+        title = 'layer: ' + str(each) +  ", kurtosis: " + str(kurt)  
+        print('3') 
+        plt.hist(fusion, bins = 30)
+        print('4')
+        plt.title(title, fontsize=10)
+                 
+        plt.savefig(log_path +'_' + each + '_graphe')
+        plt.clf()
 
 ####################################################################################
-compute_sparseness_metrics_activations(model,images_path,layers)
+distributions_activations_layers(model,images_path,layers)
 
-        
+"""
+    for each in activations_dict: 
+        fusion = np.vstack(activations_dict[each])
+        fusion = fusion.flatten()
+        kurt = scipy.stats.kurtosis(fusion)    
+        title = 'layer: ' + str(each) +  ", kurtosis: " + str(kurt)   
+        axs[j, i].hist(fusion, bins = 30)
+        if (i+1)%3 == 0:
+            i = 0
+            j += 1
+        else:
+            i += 1         
+        plt.title(title, fontsize=10) 
+                  
+        #plt.savefig(log_path +'_' + layer + 'graphe')
+    plt.show()
+"""
