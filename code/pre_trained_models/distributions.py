@@ -21,6 +21,8 @@ import numpy as np
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
 import matplotlib.pyplot as plt
+import cupy as cp
+from numba import jit, cuda
 #####################################################################################
 #SETTINGS:
 #####################################################################################
@@ -30,6 +32,7 @@ bdd = 'CFD' #'CFD','SCUT-FBP','MART','JEN','SMALLTEST','BIGTEST'
 model_name = 'VGG16'  # 'vgg16, resnet (...)'
 weights = 'imagenet' #'imagenet','vggface'
 computer = 'sonia'
+
 #####################################################################################
 if computer == 'sonia':
     if bdd == 'CFD':
@@ -139,6 +142,7 @@ def distributions_activations_layers(model,path,layers):
     
     for each in activations_dict: 
         print(each)
+
         fusion = (np.vstack(activations_dict[each])).flatten()    
         print('1')    
         kurt = scipy.stats.kurtosis(fusion)
