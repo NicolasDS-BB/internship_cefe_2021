@@ -8,7 +8,9 @@ from tensorflow.keras.applications.vgg16 import VGG16
 from keras_vggface.vggface import VGGFace
 from scipy.stats import linregress
 import PIL
-import sparsenesslib as spl #personnal library
+import sys
+sys.path.insert(1,'../../code/functions')
+from sparsenesslib import *
 import time
 t0 = time.time()
 import os
@@ -31,31 +33,60 @@ PIL.Image.MAX_IMAGE_PIXELS = 30001515195151997 #useful for JEN bc images are hea
 bdd = 'SMALLTEST' #'CFD','SCUT-FBP','MART','JEN','SMALLTEST','BIGTEST'
 model_name = 'VGG16'  # 'vgg16, resnet (...)'
 weights = 'imagenet' #'imagenet','vggface'
+computer = 'sonia'
 #####################################################################################
-if bdd == 'CFD':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/CFD/labels_CFD.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/CFD/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/CFD/log_correlations_CFD'
-elif bdd == 'JEN':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/JEN/labels_JEN.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/JEN/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/JEN/log_correlations_JEN'
-elif bdd == 'SCUT-FBP':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/SCUT-FBP/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/SCUT-FBP/log_correlations_SCUT-FBP'
-elif bdd == 'MART':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/MART/labels_MART.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/MART/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/MART/log_correlations_MART'
-elif bdd == 'SMALLTEST':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/small_test/labels_test.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/small_test/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/small_test/log_correlations_test'
-elif bdd == 'BIGTEST':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/big_test/labels_bigtest.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/big_test/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/big_test/log_correlations_bigtest'
+if computer == 'sonia':
+    if bdd == 'CFD':
+        labels_path ='../../data/redesigned/CFD/labels_CFD.csv'
+        images_path ='../../data/redesigned/CFD/images'
+        log_path ='../../data/redesigned/CFD/log_correlations_CFD'
+    elif bdd == 'JEN':
+        labels_path ='../../data/redesigned/JEN/labels_JEN.csv'
+        images_path ='../../data/redesigned/JEN/images'
+        log_path ='../../data/redesigned/JEN/log_correlations_JEN'
+    elif bdd == 'SCUT-FBP':
+        labels_path ='../../data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+        images_path ='../../data/redesigned/SCUT-FBP/images'
+        log_path ='../../data/redesigned/SCUT-FBP/log_correlations_SCUT-FBP'
+    elif bdd == 'MART':
+        labels_path ='../../data/redesigned/MART/labels_MART.csv'
+        images_path ='../../data/redesigned/MART/images'
+        log_path ='../../data/redesigned/MART/log_correlations_MART'
+    elif bdd == 'SMALLTEST':
+        labels_path ='../../data/redesigned/small_test/labels_test.csv'
+        images_path ='../../data/redesigned/small_test/images'
+        log_path ='../../data/redesigned/small_test/log_correlations_test'
+    elif bdd == 'BIGTEST':
+        labels_path ='../../data/redesigned/big_test/labels_bigtest.csv'
+        images_path ='../../data/redesigned/big_test/images'
+        log_path ='../../data/redesigned/big_test/log_correlations_bigtest'
+
+elif computer == 'nicolas':
+    if bdd == 'CFD':
+        labels_path ='../../data/redesigned/CFD/labels_CFD.csv'
+        images_path ='../../data/redesigned/CFD/images'
+        log_path ='../../data/redesigned/CFD/log_correlations_CFD'
+    elif bdd == 'JEN':
+        labels_path ='../../data/redesigned/JEN/labels_JEN.csv'
+        images_path ='../../data/redesigned/JEN/images'
+        log_path ='../../data/redesigned/JEN/log_correlations_JEN'
+    elif bdd == 'SCUT-FBP':
+        labels_path ='../../data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+        images_path ='../../data/redesigned/SCUT-FBP/images'
+        log_path ='../../data/redesigned/SCUT-FBP/log_correlations_SCUT-FBP'
+    elif bdd == 'MART':
+        labels_path ='../../data/redesigned/MART/labels_MART.csv'
+        images_path ='../../data/redesigned/MART/images'
+        log_path ='../../data/redesigned/MART/log_correlations_MART'
+    elif bdd == 'SMALLTEST':
+        labels_path ='../../data/redesigned/small_test/labels_test.csv'
+        images_path ='../../data/redesigned/small_test/images'
+        log_path ='../../data/redesigned/small_test/log_correlations_test'
+    elif bdd == 'BIGTEST':
+        labels_path ='../../data/redesigned/big_test/labels_bigtest.csv'
+        images_path ='../../data/redesigned/big_test/images'
+        log_path ='../../data/redesigned/big_test/log_correlations_bigtest'
+
 #####################################################################################
 if model_name == 'VGG16':
     if weights == 'imagenet':

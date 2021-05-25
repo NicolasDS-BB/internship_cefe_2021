@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # gini(vector)
 # treve_rolls(vector)
 # compute_flatten(activations, activations_dict,layer,formula)
