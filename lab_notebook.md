@@ -251,13 +251,13 @@ que c'est plus optimal qu'un dict dans ce cas précis, en terme de rapidité (je
  
 - optimisation du code, petites modifications par ci par là (amélioration du log, etc...)
 
-# 03/04/2021
+# 03/05/2021
 
 - téléchargement de JEN en ayant géré les échecs (65 en l'occurence, c'est acceptable sur 1600 images)
 - amélioration des paramètres du code des activations
 - erreur avec VGGFace a comprendre et corriger
 
-# 04 au 10/04/2021
+# 04 au 10/05/2021
 
 - vgg face implémenté: même architecture mais implémentation difféente (quelle idée) ce qui expliquait les soucis
 - il y avait une erreur de dimension concernant les channels: erreur corrigée
@@ -272,25 +272,25 @@ que c'est plus optimal qu'un dict dans ce cas précis, en terme de rapidité (je
 - résultats sur la norme L1 avec CFD (pas avec TR)
 -JEN: images trop grosses, preprocess impossible, régler ça
 
-# 12/04/2021
+# 12/05/2021
 
 - graphe des corrélations entre score et norme L1 pour toutes les bases de données et toutes les couches:
 	+ avec le R (corrélation)
 	+ avec aussi le R^2
 --> résultats particulièrement intéressants avec CFD, moins avec les autres
 
-# 13/04/2021
+# 13/05/2021
 
 - développement d'une fonction treve-rolls alternative avec reduce(), mais les tests semblent incohérents, vérifier qu'elle fait bien ce qui est demandé
 - création d'une bdd "bigtest" contenant 50 images de  
 - calcul de la corrélation entre TR et L1 sur bigtest
 
-# 14/04/2021
+# 14/05/2021
 
 - idée pour faire fonctionner treve rolls avec reduce: tricker la récursivité en ne l'appliquant pas au terme A, et en le faisant en dehors de reduce pour l'index 0 du vecteur
 - calcul de TR sur CFD avec imagenet et vgg face: résultats surprenants
 
-# 17/04/2021
+# 17/05/2021
 
 - découverte d'un dysfonctionnement de git
 - calcul de TR sur MART avec imagenet et vggface: résultats encore plus surprenants
@@ -299,7 +299,7 @@ que c'est plus optimal qu'un dict dans ce cas précis, en terme de rapidité (je
 	+ **TR** Graphe sur toutes les bdd (que mart et cfd) et tous les poids (un graphe rvalue, un graphe r2)
 	+ **comparaison** 2 graphe par bdd (r et r2) pour comparer L1 et TR
 
-# 18/04/2021
+# 18/05/2021
 
 - résolution du pb git: création d'un nouveau repo, perte des commits du coup. 
 - souci avec le pc gpu: souris/clavier non detectés + xfce met super longtemps à se lancer
@@ -309,26 +309,41 @@ que c'est plus optimal qu'un dict dans ce cas précis, en terme de rapidité (je
 - calcul vite fait de gini sur cfd: résultats bizarres
 - début d'un programme pour représenter les distributions
 
-# 19/04/2021
+# 19/05/2021
 
  - préparation et envoi d'une candidature à une thèse
 
- # 20/04/2021
+ # 20/05/2021
 
 - PC GPU: la souris et le clavier ne sont reconnus qu'en root sous xfce, pas en utilisateur normal
-- 
+- histogramme des distribution des activations sur quelques images (infaisable sur une bdd toute entière, processus interrompu)
+
+# 21/05/2021
+
+- migration sur le pc de Sonia, adaptation de l'environnement (packages, logiciels etc)
+- souci avec les fichiers de fonctions: pas reconnus par vscode --> exécution via le terminal
+
+# 25/05/2021
+
+- en plus de channel et flatten, création d'une fonction de calcul sur L*l pour chaque carte d'activation
+- avec cette fonction, les résultats ne changent pas avec la norme L1 mais changent complètement avec l'indice de Gini
+- lancement pendant la nuit de cette fonction sur CFD, résultats a regarder le lendemain (ça a pris 18h)
+
+# 26/05/2021
+
+- corrélations des 4 métriques entre elles (6 mesures)
+
+
 
 
 # TODO:
-
-- EN PREMIER: distribution des activations pour une image donnée (une de chaque bdd, pour chaque poid), peut être pour normaliser
+- préparer la présentation
 - en plus de channel et flatten, calculer gini sur L*l pour chaque carte d'activation, puis en faire la moyenne
-- indice de gini et hoyer, et L0
+- indice de hoyer, et L0
 - les formules ne sont pas dorcément adaptées a chaque couches
 - faire des fonctions de graphiques
 - benchmark TR et L1 sur une BDD de sparse matrix
 - vérifier que la formule de TR choisie (la 2e de l'article) est vraiment mieux que la première
-- faut il corriger les pvalues? Correction de Bonferroni adaptée? (car tests non indépendants)
 - recoder Treve-Rolls avec reduce()
 - recoder preprocessed() avec tfdata (plus opti) et adapté au formats des images de JEN
 - appliquer les conseils de Rufin, cf livre de géron, cf réunion du 08/04

@@ -13,6 +13,9 @@
 # LIBRAIRIES:
 #####################################################################################
 import time
+
+from numpy.core.fromnumeric import shape
+from numpy.lib.function_base import append, asarray_chkfinite
 t0 = time.time()
 import os
 from tensorflow.keras.preprocessing.image import load_img
@@ -25,17 +28,17 @@ from tensorflow.keras.preprocessing.image import img_to_array
 from numpy.linalg import norm
 import pandas
 import statistics as st
+import scipy
 #####################################################################################
 # PROCEDURES/FUNCTIONS:
 #####################################################################################
 def gini(vector):
-    """Calculate the Gini coefficient of a numpy array."""
-    
+    """Calculate the Gini coefficient of a numpy array."""    
     if np.amin(vector) < 0:
         # Values cannot be negative:
         vector -= np.amin(vector)
-    # Values cannot be 0:
-    vector += 0.0000001
+    # Values cannot be 0:     
+    vector = [i+0.0000001 for i in vector]     
     # Values must be sorted:
     vector = np.sort(vector)
     # Index per array element:
@@ -58,6 +61,41 @@ def treves_rolls(vector):
     tr=1 - (((numerator/length)*(numerator/length)) /denominator)
     return tr 
 ####################################################/length#################################
+def compute_filter(activations, activations_dict,layer,formula):
+    '''
+    Compute chosen formula (gini, treve-rolls, l1 norm...) for each filter (flatten), and compute the mean of them
+    '''    
+    filter = []
+    tuple = activations[layer].shape
+    liste = list(tuple)    
+    nb_channels = liste[3]
+    
+
+    for each in range(0, nb_channels-1): #on itère sur chaque filtre (profondeur)
+        filter.append([])
+        index_row = 0
+        for row in activations[layer][0]:
+            index_column = 0
+            for column in activations[layer][0][index_row]:            
+                filter[each].append(activations[layer][0][index_row][index_column][each])                 
+                index_column += 1
+            index_row += 1
+
+    filter_metrics = []
+
+    for each in filter:
+
+        if formula == 'L1':                
+            filter_metrics.append(norm(each, 1))
+        elif formula == 'treve-rolls':
+            filter_metrics.append(treves_rolls(each))
+        elif formula == 'gini':            
+            filter_metrics.append(gini(each))
+        elif formula == 'kurtosis':
+            filter_metrics.append(scipy.stats.kurtosis(each))
+    activations_dict[layer] = st.mean(filter_metrics)
+
+####################################################/length#################################
 def compute_flatten(activations, activations_dict,layer,formula):
     '''
     Create a flatten vector from each layer and compute chosen formula (gini, treve-rolls, l1 norm...) on it"
@@ -69,10 +107,12 @@ def compute_flatten(activations, activations_dict,layer,formula):
         activations_dict[layer] = (treves_rolls(arr))
     elif formula == 'gini':
         activations_dict[layer] = (gini(arr))
+    elif formula == 'kurtosis':
+        activations_dict[layer] = (scipy.stats.kurtosis(arr))
 #####################################################################################
 def compute_channel(activations, activations_dict,layer,formula):
     '''
-    Compute chosen formula (gini, treve-rolls, l1 norm...)
+    Compute chosen formula (gini, treve-rolls, l1 norm...) for each channel, and compute the mean of them
     '''
     channels = []
     index_row = 0
@@ -88,6 +128,10 @@ def compute_channel(activations, activations_dict,layer,formula):
                 channels.append(norm(channel, 1))
             elif formula == 'treve-rolls':
                 channels.append(treves_rolls(channel))
+            elif formula == 'gini':
+                channels.append(gini(channel))
+            elif formula == 'kurtosis':
+                channels.append(scipy.stats.kurtosis(channel))
             index_column += 1
         index_row += 1    
     activations_dict[layer] = st.mean(channels)
@@ -100,12 +144,17 @@ def compute_activations(layers, flatten_layers, computation, activations, activa
                     compute_flatten(activations, activations_dict, layer,formula)       
                 else:                     
                     compute_channel(activations, activations_dict, layer, formula)
+            elif computation == 'filter':
+                if layer in flatten_layers:
+                    compute_flatten(activations, activations_dict, layer,formula)       
+                else:                     
+                    compute_filter(activations, activations_dict, layer, formula)
             elif computation == 'flatten':
                 compute_flatten(activations, activations_dict, layer, formula)            
                 
             else: print('ERROR: computation setting isnt channel or flatten')
 #####################################################################################
-def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_output, layers, computation, formula):
+def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_output, layers, computation, formula, freqmod):
     """
     compute the l1 norm of the layers given in the list *layers*
     of the images contained in the directory *path*
@@ -115,7 +164,9 @@ def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_out
     imgs = [f for f in os.listdir(path)]    
     i = 1
     for each in imgs:
-        print('###### picture n°',i,'/',len(imgs),'for ',formula)
+
+        if i%freqmod == 0:
+            print('###### picture n°',i,'/',len(imgs),'for ',formula, ', ', computation)
         i += 1
         img_path = path + "/" + each
         img = load_img(img_path, target_size=(224, 224))
