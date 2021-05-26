@@ -61,7 +61,7 @@ if computer == 'sonia':
         images_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/images'
         log_path ='../../results/bigtest/log_bigtest'
 
-elif computer == 'nicolas':
+else:
     if bdd == 'CFD':
         labels_path ='../../data/redesigned/CFD/labels_CFD.csv'
         images_path ='../../data/redesigned/CFD/images'
@@ -110,7 +110,7 @@ elif model_name == 'resnet50':
     elif weights == 'vggfaces':
         print('error, model not configured')
 ####################################################################################
-def distributions_activations_layers(model,path,layers):
+def plot_distributions_activations_layers(model,path,layers):
     """
     save a hist for activations values of each layers
     """
@@ -142,22 +142,20 @@ def distributions_activations_layers(model,path,layers):
     
     for each in activations_dict: 
         print(each)
-
-        fusion = (np.vstack(activations_dict[each])).flatten()    
-        print('1')    
-        kurt = scipy.stats.kurtosis(fusion)
-        print('2')    
-        title = 'layer: ' + str(each) +  ", kurtosis: " + str(kurt)  
-        print('3') 
-        plt.hist(fusion, bins = 30)
-        print('4')
-        plt.title(title, fontsize=10)
-                 
+        fusion = (np.vstack(activations_dict[each])).flatten()         
+        kurt = scipy.stats.kurtosis(fusion)         
+        title = 'layer: ' + str(each) +  ", kurtosis: " + str(kurt)         
+        plt.hist(fusion, bins = 30)        
+        plt.title(title, fontsize=10)                 
         plt.savefig(log_path +'_' + each + '_graphe')
         plt.clf()
-
 ####################################################################################
-distributions_activations_layers(model,images_path,layers)
+plot_distributions_activations_layers(model,images_path,layers)
+
+
+
+
+
 
 """
     for each in activations_dict: 

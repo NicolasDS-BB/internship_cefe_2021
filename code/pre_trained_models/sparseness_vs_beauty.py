@@ -8,40 +8,72 @@ from tensorflow.keras.applications.vgg16 import VGG16
 from keras_vggface.vggface import VGGFace
 from scipy.stats import linregress
 import PIL
+import sys
+sys.path.insert(1,'../../code/functions')
 import sparsenesslib as spl #personnal library
 #####################################################################################
 #SETTINGS:
 #####################################################################################
 PIL.Image.MAX_IMAGE_PIXELS = 30001515195151997
 478940                             
-bdd = 'SMALLTEST' #'CFD','SCUT-FBP','MART','JEN','SMALLTEST','BIGTEST'
+bdd = 'BIGTEST' #'CFD','SCUT-FBP','MART','JEN','SMALLTEST','BIGTEST'
 model_name = 'VGG16'  # 'vgg16, resnet (...)'
-weights = 'imagenet' #'imagenet','vggface'
+weights = 'vggface' #'imagenet','vggface'
+computer = 'sonia'
+freqmod = 5 #frequency of prints, if 5: print for 1/5 images
 #####################################################################################
-if bdd == 'CFD':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/CFD/labels_CFD.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/CFD/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/CFD/log_correlations_CFD'
-elif bdd == 'JEN':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/JEN/labels_JEN.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/JEN/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/JEN/log_correlations_JEN'
-elif bdd == 'SCUT-FBP':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/SCUT-FBP/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/SCUT-FBP/log_correlations_SCUT-FBP'
-elif bdd == 'MART':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/MART/labels_MART.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/MART/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/MART/log_correlations_MART'
-elif bdd == 'SMALLTEST':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/small_test/labels_test.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/small_test/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/small_test/log_correlations_test'
-elif bdd == 'BIGTEST':
-    labels_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/big_test/labels_bigtest.csv'
-    images_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/big_test/images'
-    log_path ='/home/nicolas/Bureau/internship_cefe_2021/data/redesigned/big_test/log_correlations_bigtest'
+if computer == 'sonia': #databases aren't in repo bc they need to be in DATA partition of the pc (more space)
+    if bdd == 'CFD':
+        labels_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/labels_CFD.csv'
+        images_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/images'
+        log_path ='../../results/CFD/log_CFD'
+    elif bdd == 'JEN':
+        labels_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/labels_JEN.csv'
+        images_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/images'
+        log_path ='../../results/JEN/log_JEN'
+    elif bdd == 'SCUT-FBP':
+        labels_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+        images_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/images'
+        log_path ='../../results/SCUT-FBP/log_SCUT-FBP'
+    elif bdd == 'MART':
+        labels_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/labels_MART.csv'
+        images_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/images'
+        log_path ='../../results/MART/log_MART'
+    elif bdd == 'SMALLTEST':
+        labels_path ='../../data/redesigned/small_test/labels_test.csv'
+        images_path ='../../data/redesigned/small_test/images'
+        log_path ='../../results/smalltest/log_test'
+    elif bdd == 'BIGTEST':
+        
+        labels_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/labels_bigtest.csv'
+        images_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/images'
+        log_path ='../../results/bigtest/log_bigtest'
+
+else: #all paths are relative paths
+    if bdd == 'CFD':
+        labels_path ='../../data/redesigned/CFD/labels_CFD.csv'
+        images_path ='../../data/redesigned/CFD/images'
+        log_path ='../../data/redesigned/CFD/log_correlations_CFD'
+    elif bdd == 'JEN':
+        labels_path ='../../data/redesigned/JEN/labels_JEN.csv'
+        images_path ='../../data/redesigned/JEN/images'
+        log_path ='../../data/redesigned/JEN/log_correlations_JEN'
+    elif bdd == 'SCUT-FBP':
+        labels_path ='../../data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+        images_path ='../../data/redesigned/SCUT-FBP/images'
+        log_path ='../../data/redesigned/SCUT-FBP/log_correlations_SCUT-FBP'
+    elif bdd == 'MART':
+        labels_path ='../../data/redesigned/MART/labels_MART.csv'
+        images_path ='../../data/redesigned/MART/images'
+        log_path ='../../data/redesigned/MART/log_correlations_MART'
+    elif bdd == 'SMALLTEST':
+        labels_path ='../../data/redesigned/small_test/labels_test.csv'
+        images_path ='../../data/redesigned/small_test/images'
+        log_path ='../../data/redesigned/small_test/log_correlations_test'
+    elif bdd == 'BIGTEST':
+        labels_path ='../../data/redesigned/big_test/labels_bigtest.csv'
+        images_path ='../../data/redesigned/big_test/images'
+        log_path ='../../data/redesigned/big_test/log_correlations_bigtest'
 #####################################################################################
 if model_name == 'VGG16':
     if weights == 'imagenet':
@@ -69,45 +101,100 @@ elif model_name == 'resnet50':
 #####################################################################################
 dict_flatten_norms = {}
 dict_channel_norms = {}
-dict_channel_TR = {}
-dict_flatten_TR = {}
+dict_filter_norms = {}
+
+dict_channel_tr = {}
+dict_flatten_tr = {}
+dict_filter_tr = {}
+
+dict_channel_gini = {}
+dict_flatten_gini = {}
+dict_filter_gini = {}
+
+dict_channel_kurt = {}
+dict_flatten_kurt = {}
+dict_filter_kurt = {}
+
 dict_labels = {}
 #####################################################################################
 # CODE:
 #####################################################################################
-#spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_channel_norms, layers, 'channel', 'L1')
-spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path, dict_flatten_norms, layers, 'flatten', 'gini')
-#spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_channel_TR, layers, 'channel', 'treve-rolls') #extrèmement lent même sur le test
-#spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path, dict_flatten_TR, layers, 'flatten', 'treve-rolls')
+spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_flatten_norms, layers, 'flatten', 'L1', freqmod)
+spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path, dict_flatten_tr, layers, 'flatten', 'treve-rolls', freqmod)
+spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_flatten_gini, layers, 'flatten', 'gini', freqmod) 
+spl.compute_sparseness_metrics_activations(model,flatten_layers, images_path, dict_flatten_kurt, layers, 'flatten', 'kurtosis', freqmod)
 
 spl.parse_rates(labels_path, dict_labels)
 
 df_flatten_norms = spl.create_dataframe(dict_labels, dict_flatten_norms)
-#df_flatten_TR = create_dataframe(dict_labels, dict_flatten_TR)
-#df_channel_norms = create_dataframe(dict_labels,dict_channel_norms)
-#df_channel_TR = create_dataframe(dict_labels,dict_channel_TR)
+df_flatten_tr = spl.create_dataframe(dict_labels, dict_flatten_tr)
+df_flatten_gini = spl.create_dataframe(dict_labels,dict_flatten_gini)
+df_flatten_kurt = spl.create_dataframe(dict_labels,dict_flatten_kurt)
 
-with open(log_path +'_'+ weights+'_gini.csv',"w") as file:
+
+with open(log_path +'_'+ weights+'_allcorr.csv',"w") as file:
          
     file.write('layer')
     file.write(';')
-    file.write('R_flatten_L1_norm')
+    file.write('corr_L1_vs_TR')
     file.write(';')
-    file.write('pvalue_L1_norm')
+    file.write('corr_L1_vs_Gini')
     file.write(';')
-    file.write('R_flatten_treve-rolls')
+    file.write('corr_L1_vs_Kurtosis')
     file.write(';')
-    file.write('pvalue_treve-rolls')
+    file.write('corr_TR_vs_Gini')
     file.write(';')
-    file.write('R_L1_vs_treve-rolls')
+    file.write('corr_TR_vs_Kurtosis')
     file.write(';')
-    file.write('pvalue_L1_vs_treve-rolls')
+    file.write('corr_Gini_vs_Kurtosis')
     file.write(';')
     file.write('\n') 
     for layer in layers:
         file.write(layer)
         file.write(';')
-        #flatten_L1
+        #corr_L1_vs_TR
+        l1 = list(df_flatten_norms[layer])
+        l2 = list(df_flatten_tr[layer])
+        reg = linregress(l1,l2)
+        coeff = str(reg.rvalue)
+        file.write(coeff)
+        file.write(';')    
+        #corr_L1_vs_Gini
+        l1 = list(df_flatten_norms[layer])
+        l2 = list(df_flatten_gini[layer])
+        reg = linregress(l1,l2)
+        coeff = str(reg.rvalue)
+        file.write(coeff)
+        file.write(';') 
+        #corr_L1_vs_Kurtosis
+        l1 = list(df_flatten_norms[layer])
+        l2 = list(df_flatten_kurt[layer])
+        reg = linregress(l1,l2)
+        coeff = str(reg.rvalue)
+        file.write(coeff)
+        file.write(';') 
+        #corr_TR_vs_Gini
+        l1 = list(df_flatten_tr[layer])
+        l2 = list(df_flatten_gini[layer])
+        reg = linregress(l1,l2)
+        coeff = str(reg.rvalue)
+        file.write(coeff)
+        file.write(';') 
+        #corr_TR_vs_Kurtosis
+        l1 = list(df_flatten_tr[layer])
+        l2 = list(df_flatten_kurt[layer])
+        reg = linregress(l1,l2)
+        coeff = str(reg.rvalue)
+        file.write(coeff)
+        file.write(';') 
+        #corr_Gini_vs_Kurtosis
+        l1 = list(df_flatten_gini[layer])
+        l2 = list(df_flatten_kurt[layer])
+        reg = linregress(l1,l2)
+        coeff = str(reg.rvalue)
+        file.write(coeff)
+        file.write(';') 
+        '''#flatten_L1
         list_flatten_norms = list(df_flatten_norms[layer])
         list_flatten_rate = list(df_flatten_norms['rate'])
         reg = linregress(list_flatten_norms,list_flatten_rate)       
@@ -118,8 +205,8 @@ with open(log_path +'_'+ weights+'_gini.csv',"w") as file:
         file.write(pvalue)
         file.write(';')        
         #flatten_TR
-        '''list_flatten_TR = list(df_flatten_TR[layer])        
-        reg = linregress(list_flatten_TR,list_flatten_rate)       
+        list_filter_norms = list(df_filter_norms[layer])        
+        reg = linregress(list_filter_norms,list_flatten_rate)       
         coeff = str(reg.rvalue)
         pvalue = str(reg.pvalue)        
         file.write(coeff)
