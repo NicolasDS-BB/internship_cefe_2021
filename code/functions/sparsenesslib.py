@@ -13,10 +13,6 @@
 # LIBRAIRIES:
 #####################################################################################
 import time
-
-from numpy.core.fromnumeric import shape
-from numpy.lib.function_base import append, asarray_chkfinite
-t0 = time.time()
 import os
 from tensorflow.keras.preprocessing.image import load_img
 import csv
@@ -24,11 +20,18 @@ import keract  # low to import
 import numpy as np
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
-
 from numpy.linalg import norm
 import pandas
 import statistics as st
 import scipy
+t0 = time.time()
+from tensorflow.keras.applications.vgg16 import VGG16
+from keras_vggface.vggface import VGGFace
+from scipy.stats import linregress
+import sys
+sys.path.insert(1,'../../code/functions')
+import sparsenesslib as spl #personnal library
+import statistics as st
 #####################################################################################
 # PROCEDURES/FUNCTIONS:
 #####################################################################################
@@ -61,15 +64,18 @@ def treves_rolls(vector):
     tr=1 - (((numerator/length)*(numerator/length)) /denominator)
     return tr 
 ####################################################/length#################################
-def compute_filter(activations, activations_dict,layer,formula):
+def compute_filter(activations, activations_dict,layer,formula,k):
     '''
     Compute chosen formula (gini, treve-rolls, l1 norm...) for each filter (flatten), and compute the mean of them
     '''    
     filter = []
+
+    if layer[0:5] == 'input':
+        layer = 'input' + '_' + str(k)
+
     tuple = activations[layer].shape
     liste = list(tuple)    
-    nb_channels = liste[3]
-    
+    nb_channels = liste[3] 
 
     for each in range(0, nb_channels-1): #on itère sur chaque filtre (profondeur)
         filter.append([])
@@ -96,10 +102,13 @@ def compute_filter(activations, activations_dict,layer,formula):
     activations_dict[layer] = st.mean(filter_metrics)
 
 ####################################################/length#################################
-def compute_flatten(activations, activations_dict,layer,formula):
+def compute_flatten(activations, activations_dict,layer,formula,k):
     '''
     Create a flatten vector from each layer and compute chosen formula (gini, treve-rolls, l1 norm...) on it"
     '''
+    if layer[0:5] == 'input':
+        layer = 'input' + '_' + str(k)
+    
     arr = activations[layer].flatten()
     if formula == 'L1':    
         activations_dict[layer] = (norm(arr, 1))        
@@ -110,20 +119,20 @@ def compute_flatten(activations, activations_dict,layer,formula):
     elif formula == 'kurtosis':
         activations_dict[layer] = (scipy.stats.kurtosis(arr))
 #####################################################################################
-def compute_channel(activations, activations_dict,layer,formula):
+def compute_channel(activations, activations_dict,layer,formula,k):
     '''
     Compute chosen formula (gini, treve-rolls, l1 norm...) for each channel, and compute the mean of them
     '''
     channels = []
     index_row = 0
+
+    if layer[0:5] == 'input':
+        layer = 'input' + '_' + str(k)
+
     for row in activations[layer][0]:
         index_column = 0
-        '''print('dimlayer ',layer,': ',activations[layer][0].shape)
-        print('dimlayerbis ',layer,': ',activations[layer].shape)'''
         for column in activations[layer][0][index_row]:            
-            channel = activations[layer][0][index_row][index_column] 
-            #print('dimchannel:',channel.shape)
-            #print('###############')            
+            channel = activations[layer][0][index_row][index_column]            
             if formula == 'L1':                
                 channels.append(norm(channel, 1))
             elif formula == 'treve-rolls':
@@ -136,25 +145,25 @@ def compute_channel(activations, activations_dict,layer,formula):
         index_row += 1    
     activations_dict[layer] = st.mean(channels)
 #####################################################################################
-def compute_activations(layers, flatten_layers, computation, activations, activations_dict,formula):
+def compute_activations(layers, flatten_layers, computation, activations, activations_dict,formula, k):
         
         for layer in layers:            
             if computation == 'channel':                
                 if layer in flatten_layers:
-                    compute_flatten(activations, activations_dict, layer,formula)       
+                    compute_flatten(activations, activations_dict, layer,formula,k)       
                 else:                     
-                    compute_channel(activations, activations_dict, layer, formula)
+                    compute_channel(activations, activations_dict, layer, formula,k)
             elif computation == 'filter':
                 if layer in flatten_layers:
-                    compute_flatten(activations, activations_dict, layer,formula)       
+                    compute_flatten(activations, activations_dict, layer,formula,k)       
                 else:                     
-                    compute_filter(activations, activations_dict, layer, formula)
+                    compute_filter(activations, activations_dict, layer, formula,k)
             elif computation == 'flatten':
-                compute_flatten(activations, activations_dict, layer, formula)            
+                compute_flatten(activations, activations_dict, layer, formula,k)            
                 
             else: print('ERROR: computation setting isnt channel or flatten')
 #####################################################################################
-def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_output, layers, computation, formula, freqmod):
+def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_output, layers, computation, formula, freqmod,k):
     """
     compute the l1 norm of the layers given in the list *layers*
     of the images contained in the directory *path*
@@ -177,7 +186,7 @@ def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_out
         # récupération des activations
         activations = keract.get_activations(model, image)
         activations_dict = {}
-        compute_activations(layers, flatten_layers, computation, activations, activations_dict,formula)
+        compute_activations(layers, flatten_layers, computation, activations, activations_dict,formula,k)
         dict_output[each] = activations_dict
 #####################################################################################
 def parse_rates(labels_path , dict_labels):
@@ -203,3 +212,156 @@ def create_dataframe(dict_rates, dict_norm):
 
     df = pandas.concat([df1, df2], axis = 1)     
     return df
+#####################################################################################
+
+def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k):
+    if computer == 'sonia': #databases aren't in repo bc they need to be in DATA partition of the pc (more space)
+        if bdd == 'CFD':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/labels_CFD.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/images'
+            log_path ='../../results/CFD/log_'
+        elif bdd == 'JEN':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/labels_JEN.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/images'
+            log_path ='../../results/JEN/log_'
+        elif bdd == 'SCUT-FBP':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/images'
+            log_path ='../../results/SCUT-FBP/log_'
+        elif bdd == 'MART':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/labels_MART.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/images'
+            log_path ='../../results/MART/log_'
+        elif bdd == 'SMALLTEST':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/small_test/labels_test.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/small_test/images'
+            log_path ='../../results/smalltest/log_'
+        elif bdd == 'BIGTEST':        
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/labels_bigtest.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/images'
+            log_path ='../../results/bigtest/log_'
+
+    else: #all paths are relative paths
+        if bdd == 'CFD':
+            labels_path ='../../data/redesigned/CFD/labels_CFD.csv'
+            images_path ='../../data/redesigned/CFD/images'
+            log_path ='../../data/redesigned/CFD/log_'
+        elif bdd == 'JEN':
+            labels_path ='../../data/redesigned/JEN/labels_JEN.csv'
+            images_path ='../../data/redesigned/JEN/images'
+            log_path ='../../data/redesigned/JEN/log_correlations_JEN'
+        elif bdd == 'SCUT-FBP':
+            labels_path ='../../data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+            images_path ='../../data/redesigned/SCUT-FBP/images'
+            log_path ='../../data/redesigned/SCUT-FBP/log_'
+        elif bdd == 'MART':
+            labels_path ='../../data/redesigned/MART/labels_MART.csv'
+            images_path ='../../data/redesigned/MART/images'
+            log_path ='../../data/redesigned/MART/log_'
+        elif bdd == 'SMALLTEST':
+            labels_path ='../../data/redesigned/small_test/labels_test.csv'
+            images_path ='../../data/redesigned/small_test/images'
+            log_path ='../../data/redesigned/small_test/log_'
+        elif bdd == 'BIGTEST':
+            labels_path ='../../data/redesigned/big_test/labels_bigtest.csv'
+            images_path ='../../data/redesigned/big_test/images'
+            log_path ='../../data/redesigned/big_test/log_'
+    #####################################################################################
+    if model_name == 'VGG16':
+        if weight == 'imagenet':
+            model = VGG16(weights = 'imagenet')
+            layers = ['input_1','block1_conv1','block1_conv2','block1_pool','block2_conv1', 'block2_conv2','block2_pool',
+            'block3_conv1','block3_conv2','block3_conv3','block3_pool','block4_conv1','block4_conv2','block4_conv3',
+            'block4_pool', 'block5_conv1','block5_conv2','block5_conv3','block5_pool','flatten','fc1', 'fc2'] 
+            flatten_layers = ['fc1','fc2','flatten']
+        elif weight == 'vggface':
+            model = VGGFace(model = 'vgg16', weights = 'vggface')
+            layers = ['input_1','conv1_1','conv1_2','pool1','conv2_1','conv2_2','pool2','conv3_1','conv3_2','conv3_3',
+            'pool3','conv4_1','conv4_2','conv4_3','pool4','conv5_1','conv5_2','conv5_3','pool5','flatten',
+            'fc6/relu','fc7/relu']
+            flatten_layers = ['flatten','fc6','fc6/relu','fc7','fc7/relu','fc8','fc8/softmax']
+    elif model_name == 'resnet50':
+        if weight == 'imagenet': 
+            print('error, model not configured')
+        elif weight == 'vggfaces':
+            print('error, model not configured')
+    #####################################################################################
+    # VARIABLES:
+    #####################################################################################
+    dict_compute_metric = {}
+    dict_labels = {}
+    #####################################################################################
+    # CODE:
+    #####################################################################################
+    if metric == 'kurtosis':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
+
+    if metric == 'L1':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
+
+    if metric == 'gini_flatten':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', 'gini', freqmod, k)
+
+    if metric == 'gini_channel':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'channel', 'gini', freqmod, k)
+
+    if metric == 'gini_filter':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'filter', 'gini', freqmod, k)
+
+    parse_rates(labels_path, dict_labels)
+    df_metrics = spl.create_dataframe(dict_labels, dict_compute_metric)
+    #####################################################################################
+    #écriture du fichier
+    #####################################################################################
+    with open(log_path +'_'+ bdd +'_'+ weight +'_'+ metric +'.csv',"w") as file:            
+        file.write('layer')
+        file.write(';')
+        file.write('mean_'+str(metric)) #valeur moyenne de la métrique par couche
+        file.write(';')
+        file.write('sd_'+str(metric)) #écart type de la métrique par couche
+        file.write(';')
+        file.write('corr_beauty_VS_'+'metric') #corrélation de la métrique avec la valeur de beauté/attractivité
+        file.write(';')
+        file.write('pvalue')
+        file.write(';')
+        file.write('\n') 
+        for layer in layers:
+            if layer[0:5] == 'input':
+                layer = 'input' + '_' + str(k)
+            file.write(layer)
+            file.write(';')
+            #mean
+            l1 = list(df_metrics[layer])
+            file.write(str(st.mean(l1)))
+            file.write(';')    
+            #standard deviation
+            l1 = list(df_metrics[layer])
+            file.write(str(st.stdev(l1)))
+            file.write(';') 
+            #correlation with beauty
+            l1 = list(df_metrics[layer])
+            l2 = list(df_metrics['rate'])
+            reg = linregress(l1,l2)
+            coeff = str(reg.rvalue)         
+            file.write(coeff)
+            file.write(';')  
+            #pvalue
+            pvalue = str(reg.pvalue) 
+            file.write(pvalue)
+            file.write(';')  
+            file.write("\n")        
+        t1 = time.time()
+        file.write("\n")
+        file.write("##############")
+        file.write("\n")
+        file.write('bdd;'+ bdd)
+        file.write("\n")
+        file.write('weights;'+ weight)
+        file.write("\n")        
+        file.write('metric;'+ metric)
+        file.write("\n")
+        total = (t1-t0)/60
+        total = str(total)
+        file.write("time;")    
+        file.write(total)
+        file.write(';minutes')
