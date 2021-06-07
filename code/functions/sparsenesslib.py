@@ -32,6 +32,8 @@ import sys
 sys.path.insert(1,'../../code/functions')
 import sparsenesslib as spl #personnal library
 import statistics as st
+import matplotlib.pyplot as plt
+import itertools
 #####################################################################################
 # PROCEDURES/FUNCTIONS:
 #####################################################################################
@@ -90,7 +92,8 @@ def compute_filter(activations, activations_dict,layer,formula,k):
     filter_metrics = []
 
     for each in filter:
-
+        if formula == 'L0':                
+            filter_metrics.append(1 - (norm(each, 0)/len(each)))
         if formula == 'L1':                
             filter_metrics.append(norm(each, 1))
         elif formula == 'treve-rolls':
@@ -110,6 +113,8 @@ def compute_flatten(activations, activations_dict,layer,formula,k):
         layer = 'input' + '_' + str(k)
     
     arr = activations[layer].flatten()
+    if formula == 'L0':    
+        activations_dict[layer] = (1 - (norm(arr, 0)/len(arr)))
     if formula == 'L1':    
         activations_dict[layer] = (norm(arr, 1))        
     elif formula == 'treve-rolls':        
@@ -132,8 +137,10 @@ def compute_channel(activations, activations_dict,layer,formula,k):
     for row in activations[layer][0]:
         index_column = 0
         for column in activations[layer][0][index_row]:            
-            channel = activations[layer][0][index_row][index_column]            
-            if formula == 'L1':                
+            channel = activations[layer][0][index_row][index_column]      
+            if formula == 'L0':                
+                channels.append(1-(norm(channel, 0)/len(channel)))                
+            elif formula == 'L1':                
                 channels.append(norm(channel, 1))
             elif formula == 'treve-rolls':
                 channels.append(treves_rolls(channel))
@@ -164,12 +171,12 @@ def compute_activations(layers, flatten_layers, computation, activations, activa
             else: print('ERROR: computation setting isnt channel or flatten')
 #####################################################################################
 def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_output, layers, computation, formula, freqmod,k):
-    """
+    '''
     compute the l1 norm of the layers given in the list *layers*
     of the images contained in the directory *path*
     by one of those 2 modes: flatten or channel (cf previous functions)
     and store them in the dictionary *dict_output*.
-    """
+    '''
     imgs = [f for f in os.listdir(path)]    
     i = 1
     for each in imgs:
@@ -190,10 +197,10 @@ def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_out
         dict_output[each] = activations_dict
 #####################################################################################
 def parse_rates(labels_path , dict_labels):
-    """
+    '''
     Stores notes and image names contained in *path* 
     in *dict* as {name:note}    
-    """
+    '''
     with open(labels_path, newline='') as labels:
         reader = csv.reader(labels)
         for line in reader:
@@ -202,19 +209,188 @@ def parse_rates(labels_path , dict_labels):
             dict_labels[key] = float(rate)
 #####################################################################################
 def create_dataframe(dict_rates, dict_norm):
-    """
+    '''
     Creates a pandas dataframe that has a beauty score associates
     the L1 of the associated image layers
     rows: images, column 1: notes, column 2 to n: L1 norms
-    """
+    '''
     df1 = pandas.DataFrame.from_dict(dict_rates, orient='index', columns = ['rate'])
     df2 = pandas.DataFrame.from_dict(dict_norm, orient='index')     
 
     df = pandas.concat([df1, df2], axis = 1)     
     return df
 #####################################################################################
+def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k = 1):
+    '''
+    something like a main, but in a function (with all previous function)
+    ,also, load paths, models/weights parameters and write log file
 
-def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k):
+    *k:index of the loop, default is 1*
+    '''
+    if computer == 'sonia': #databases aren't in repo bc they need to be in DATA partition of the pc (more space)
+        if bdd == 'CFD':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/labels_CFD.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/images'
+            log_path ='../../results/CFD/log_'
+        elif bdd == 'JEN':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/labels_JEN.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/images'
+            log_path ='../../results/JEN/log_'
+        elif bdd == 'SCUT-FBP':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/images'
+            log_path ='../../results/SCUT-FBP/log_'
+        elif bdd == 'MART':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/labels_MART.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/images'
+            log_path ='../../results/MART/log_'
+        elif bdd == 'SMALLTEST':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/small_test/labels_test.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/small_test/images'
+            log_path ='../../results/smalltest/log_'
+        elif bdd == 'BIGTEST':        
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/labels_bigtest.csv'
+            images_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/images'
+            log_path ='../../results/bigtest/log_'
+
+    else: #all paths are relative paths
+        if bdd == 'CFD':
+            labels_path ='../../data/redesigned/CFD/labels_CFD.csv'
+            images_path ='../../data/redesigned/CFD/images'
+            log_path ='../../data/redesigned/CFD/log_'
+        elif bdd == 'JEN':
+            labels_path ='../../data/redesigned/JEN/labels_JEN.csv'
+            images_path ='../../data/redesigned/JEN/images'
+            log_path ='../../data/redesigned/JEN/log_correlations_JEN'
+        elif bdd == 'SCUT-FBP':
+            labels_path ='../../data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+            images_path ='../../data/redesigned/SCUT-FBP/images'
+            log_path ='../../data/redesigned/SCUT-FBP/log_'
+        elif bdd == 'MART':
+            labels_path ='../../data/redesigned/MART/labels_MART.csv'
+            images_path ='../../data/redesigned/MART/images'
+            log_path ='../../data/redesigned/MART/log_'
+        elif bdd == 'SMALLTEST':
+            labels_path ='../../data/redesigned/small_test/labels_test.csv'
+            images_path ='../../data/redesigned/small_test/images'
+            log_path ='../../data/redesigned/small_test/log_'
+        elif bdd == 'BIGTEST':
+            labels_path ='../../data/redesigned/big_test/labels_bigtest.csv'
+            images_path ='../../data/redesigned/big_test/images'
+            log_path ='../../data/redesigned/big_test/log_'
+    #####################################################################################
+    if model_name == 'VGG16':
+        if weight == 'imagenet':
+            model = VGG16(weights = 'imagenet')
+            layers = ['input_1','block1_conv1','block1_conv2','block1_pool','block2_conv1', 'block2_conv2','block2_pool',
+            'block3_conv1','block3_conv2','block3_conv3','block3_pool','block4_conv1','block4_conv2','block4_conv3',
+            'block4_pool', 'block5_conv1','block5_conv2','block5_conv3','block5_pool','flatten','fc1', 'fc2'] 
+            flatten_layers = ['fc1','fc2','flatten']
+        elif weight == 'vggface':
+            model = VGGFace(model = 'vgg16', weights = 'vggface')
+            layers = ['input_1','conv1_1','conv1_2','pool1','conv2_1','conv2_2','pool2','conv3_1','conv3_2','conv3_3',
+            'pool3','conv4_1','conv4_2','conv4_3','pool4','conv5_1','conv5_2','conv5_3','pool5','flatten',
+            'fc6/relu','fc7/relu']
+            flatten_layers = ['flatten','fc6','fc6/relu','fc7','fc7/relu','fc8','fc8/softmax']
+    elif model_name == 'resnet50':
+        if weight == 'imagenet': 
+            print('error, model not configured')
+        elif weight == 'vggfaces':
+            print('error, model not configured')
+    #####################################################################################
+    # VARIABLES:
+    #####################################################################################
+    dict_compute_metric = {}
+    dict_labels = {}
+    #####################################################################################
+    # CODE:
+    #####################################################################################
+    if metric == 'L0':
+            compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
+
+    if metric == 'kurtosis':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
+
+    if metric == 'L1':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
+
+    if metric == 'gini_flatten':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', 'gini', freqmod, k)
+
+    if metric == 'gini_channel':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'channel', 'gini', freqmod, k)
+
+    if metric == 'gini_filter':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'filter', 'gini', freqmod, k)
+
+
+
+
+    parse_rates(labels_path, dict_labels)
+    df_metrics = spl.create_dataframe(dict_labels, dict_compute_metric)
+    #####################################################################################
+    #écriture du fichier
+    #####################################################################################
+    with open(log_path +'_'+ bdd +'_'+ weight +'_'+ metric +'.csv',"w") as file:            
+        file.write('layer')
+        file.write(';')
+        file.write('mean_'+str(metric)) #valeur moyenne de la métrique par couche
+        file.write(';')
+        file.write('sd_'+str(metric)) #écart type de la métrique par couche
+        file.write(';')
+        file.write('corr_beauty_VS_'+'metric') #corrélation de la métrique avec la valeur de beauté/attractivité
+        file.write(';')
+        file.write('pvalue')
+        file.write(';')
+        file.write('\n') 
+        for layer in layers:
+            if layer[0:5] == 'input':
+                layer = 'input' + '_' + str(k)
+            file.write(layer)
+            file.write(';')
+            #mean
+            l1 = list(df_metrics[layer])
+            file.write(str(st.mean(l1)))
+            file.write(';')    
+            #standard deviation
+            l1 = list(df_metrics[layer])
+            file.write(str(st.stdev(l1)))
+            file.write(';') 
+            #correlation with beauty
+            l1 = list(df_metrics[layer])
+            l2 = list(df_metrics['rate'])
+            reg = linregress(l1,l2)
+            coeff = str(reg.rvalue)         
+            file.write(coeff)
+            file.write(';')  
+            #pvalue
+            pvalue = str(reg.pvalue) 
+            file.write(pvalue)
+            file.write(';')  
+            file.write("\n")        
+        t1 = time.time()
+        file.write("\n")
+        file.write("##############")
+        file.write("\n")
+        file.write('bdd;'+ bdd)
+        file.write("\n")
+        file.write('weights;'+ weight)
+        file.write("\n")        
+        file.write('metric;'+ metric)
+        file.write("\n")
+        total = (t1-t0)/60
+        total = str(total)
+        file.write("time;")    
+        file.write(total)
+        file.write(';minutes')
+#####################################################################################
+def layers_analysis_distributions(bdd,weight,metric, model_name, computer, freqmod,k = 1):
+    '''
+    something like a main, but in a function (with all previous function)
+    ,also, load paths, models/weights parameters and write log file
+
+    *k:index of the loop, default is 1*
+    '''
     if computer == 'sonia': #databases aren't in repo bc they need to be in DATA partition of the pc (more space)
         if bdd == 'CFD':
             labels_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/labels_CFD.csv'
@@ -296,6 +472,9 @@ def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k):
     if metric == 'kurtosis':
         compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
 
+    if metric == 'L0':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
+
     if metric == 'L1':
         compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
 
@@ -308,60 +487,29 @@ def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k):
     if metric == 'gini_filter':
         compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'filter', 'gini', freqmod, k)
 
+
+
     parse_rates(labels_path, dict_labels)
     df_metrics = spl.create_dataframe(dict_labels, dict_compute_metric)
+
     #####################################################################################
-    #écriture du fichier
-    #####################################################################################
-    with open(log_path +'_'+ bdd +'_'+ weight +'_'+ metric +'.csv',"w") as file:            
-        file.write('layer')
-        file.write(';')
-        file.write('mean_'+str(metric)) #valeur moyenne de la métrique par couche
-        file.write(';')
-        file.write('sd_'+str(metric)) #écart type de la métrique par couche
-        file.write(';')
-        file.write('corr_beauty_VS_'+'metric') #corrélation de la métrique avec la valeur de beauté/attractivité
-        file.write(';')
-        file.write('pvalue')
-        file.write(';')
-        file.write('\n') 
-        for layer in layers:
-            if layer[0:5] == 'input':
-                layer = 'input' + '_' + str(k)
-            file.write(layer)
-            file.write(';')
-            #mean
-            l1 = list(df_metrics[layer])
-            file.write(str(st.mean(l1)))
-            file.write(';')    
-            #standard deviation
-            l1 = list(df_metrics[layer])
-            file.write(str(st.stdev(l1)))
-            file.write(';') 
-            #correlation with beauty
-            l1 = list(df_metrics[layer])
-            l2 = list(df_metrics['rate'])
-            reg = linregress(l1,l2)
-            coeff = str(reg.rvalue)         
-            file.write(coeff)
-            file.write(';')  
-            #pvalue
-            pvalue = str(reg.pvalue) 
-            file.write(pvalue)
-            file.write(';')  
-            file.write("\n")        
-        t1 = time.time()
-        file.write("\n")
-        file.write("##############")
-        file.write("\n")
-        file.write('bdd;'+ bdd)
-        file.write("\n")
-        file.write('weights;'+ weight)
-        file.write("\n")        
-        file.write('metric;'+ metric)
-        file.write("\n")
-        total = (t1-t0)/60
-        total = str(total)
-        file.write("time;")    
-        file.write(total)
-        file.write(';minutes')
+    #écriture des histogrammes
+    #####################################################################################   
+    fusion = []
+    
+    for layer in layers:
+        if layer[0:5] == 'input':
+            layer = 'input' + '_' + str(k)         
+        fusion = list(itertools.chain(fusion, list(df_metrics[layer])))
+
+    title = 'distrib_'+ bdd +'_'+ weight +'_'+ metric   
+    plt.hist(fusion, bins = 40)        
+    plt.title(title, fontsize=10)                 
+    plt.savefig(log_path +'_'+ bdd +'_'+ weight +'_'+ metric +'.png')
+    plt.clf()
+
+
+
+
+
+            
