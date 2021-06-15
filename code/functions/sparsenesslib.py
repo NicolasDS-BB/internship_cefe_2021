@@ -34,6 +34,9 @@ import sparsenesslib as spl #personnal library
 import statistics as st
 import matplotlib.pyplot as plt
 import itertools
+import statsmodels.api as sm
+import seaborn as sns
+import scipy.optimize as opt
 #####################################################################################
 # PROCEDURES/FUNCTIONS:
 #####################################################################################
@@ -208,17 +211,32 @@ def parse_rates(labels_path , dict_labels):
             rate = line[1]
             dict_labels[key] = float(rate)
 #####################################################################################
-def create_dataframe(dict_rates, dict_norm):
+def create_dataframe(dict_rates, dict_norm, name = 'rate'):
     '''
     Creates a pandas dataframe that has a beauty score associates
     the L1 of the associated image layers
     rows: images, column 1: notes, column 2 to n: L1 norms
     '''
-    df1 = pandas.DataFrame.from_dict(dict_rates, orient='index', columns = ['rate'])
+    df1 = pandas.DataFrame.from_dict(dict_rates, orient='index', columns = [name])
     df2 = pandas.DataFrame.from_dict(dict_norm, orient='index')     
 
     df = pandas.concat([df1, df2], axis = 1)     
     return df
+#####################################################################################
+def create_dataframe_reglog(dict_rates, dict_norm, name = 'rate'):
+    '''
+    Creates a pandas dataframe that has a beauty score associates
+    the L1 of the associated image layers
+    rows: images, column 1: notes, column 2 to n: L1 norms
+    '''
+    df1 = pandas.DataFrame.from_dict(dict_rates, orient='index', columns = [name])
+    df2 = pandas.DataFrame.from_dict(dict_norm, orient='index', columns = ['reglog'] )     
+
+    df = pandas.concat([df1, df2], axis = 1)     
+    return df
+#####################################################################################
+def gompertzFct (t , N , r , t0 ):
+        return N * np . exp ( - np . exp ( - r * (t - t0 ))) 
 #####################################################################################
 def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k = 1):
     '''
@@ -257,27 +275,27 @@ def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k = 1):
         if bdd == 'CFD':
             labels_path ='../../data/redesigned/CFD/labels_CFD.csv'
             images_path ='../../data/redesigned/CFD/images'
-            log_path ='../../data/redesigned/CFD/log_'
+            log_path ='../../results/CFD/log_'
         elif bdd == 'JEN':
             labels_path ='../../data/redesigned/JEN/labels_JEN.csv'
             images_path ='../../data/redesigned/JEN/images'
-            log_path ='../../data/redesigned/JEN/log_correlations_JEN'
+            log_path ='../../results/JEN/log_'
         elif bdd == 'SCUT-FBP':
             labels_path ='../../data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
             images_path ='../../data/redesigned/SCUT-FBP/images'
-            log_path ='../../data/redesigned/SCUT-FBP/log_'
+            log_path ='../../results/SCUT-FBP/log_'
         elif bdd == 'MART':
             labels_path ='../../data/redesigned/MART/labels_MART.csv'
             images_path ='../../data/redesigned/MART/images'
-            log_path ='../../data/redesigned/MART/log_'
+            log_path ='../../results/MART/log_'
         elif bdd == 'SMALLTEST':
             labels_path ='../../data/redesigned/small_test/labels_test.csv'
             images_path ='../../data/redesigned/small_test/images'
-            log_path ='../../data/redesigned/small_test/log_'
+            log_path ='../../results/smalltest/log_'
         elif bdd == 'BIGTEST':
             labels_path ='../../data/redesigned/big_test/labels_bigtest.csv'
             images_path ='../../data/redesigned/big_test/images'
-            log_path ='../../data/redesigned/big_test/log_'
+            log_path ='../../results/bigtest/log_'
     #####################################################################################
     if model_name == 'VGG16':
         if weight == 'imagenet':
@@ -324,10 +342,97 @@ def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k = 1):
         compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'filter', 'gini', freqmod, k)
 
 
-
-
     parse_rates(labels_path, dict_labels)
-    df_metrics = spl.create_dataframe(dict_labels, dict_compute_metric)
+    df_metrics = spl.create_dataframe(dict_labels, dict_compute_metric)    
+    #####################################################################################
+    #écriture des histogrammes
+    #####################################################################################   
+    y = []    
+    for layer in layers:
+        if layer[0:5] == 'input':
+            layer = 'input' + '_' + str(k)         
+        y = list(itertools.chain(y, list(df_metrics[layer])))
+    title = 'distrib_'+ bdd +'_'+ weight +'_'+ metric   
+    plt.hist(y, bins = 40)        
+    plt.title(title, fontsize=10)                 
+    plt.savefig(log_path +'_'+ bdd +'_'+ weight +'_'+ metric +'.png')
+    plt.clf()
+    #####################################################################################
+    #régression logistique
+    ##################################################################################### 
+    i = 1  
+    x = []  
+    for each in range(len(layers)):
+        x.append(i)
+        i += 1
+    x = pandas.DataFrame(x) 
+
+    dict_reglog = {}
+
+    for row in df_metrics.iterrows():
+        y = []
+        j = 0
+        for each in list(row)[1]:
+            if j != 0:
+                y.append(each)
+            j += 1   
+
+        picture = list(row)[0]
+
+        y= pandas.DataFrame(y)
+        df = pandas.concat([x,y], axis=1)   
+        df.columns = ['x', 'y']
+        # on ajoute une colonne pour la constante
+        x_stat = sm.add_constant(x)
+        # on ajuste le modèle
+        model = sm.Logit(y, x_stat)
+        result = model.fit()    
+        #on récupère le coefficient
+        coeff = result.params[0]
+        dict_reglog[picture] = coeff
+
+    print(dict_reglog)       
+
+    df_reglog = spl.create_dataframe_reglog(dict_labels, dict_reglog)
+    '''sns.lmplot(x='x', logistic=True, y='y', data = df)
+    plt.show()'''
+    #####################################################################################
+    #minimum - maximum
+    ##################################################################################### 
+    dict_scope = {}
+
+    for row in df_metrics.iterrows():
+        y = []
+        j = 0
+        for each in list(row)[1]:
+            if j != 0:
+                y.append(each)
+            j += 1   
+
+        picture = list(row)[0]
+
+        maximum = max(y)
+        minimum = min(y)
+        diff = maximum - minimum
+
+
+        dict_scope[picture] = diff       
+
+    df_scope = spl.create_dataframe_reglog(dict_labels, dict_scope)
+    #####################################################################################
+    #Gompertz
+    #####################################################################################   
+    '''I_t = y [ x :]
+    t = np.arange (len( I_t ))
+
+    model = gompertzFct ;
+    guess = (100000. , .1 , 50.)
+
+    parameters , variances = opt . curve_fit ( model , t , I_t , p0 = guess )
+
+    G_t = model (t , * parameters )
+
+    print ( np . sqrt ( np . mean (( I_t - G_t )**2)))'''
     #####################################################################################
     #écriture du fichier
     #####################################################################################
@@ -383,133 +488,23 @@ def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k = 1):
         file.write("time;")    
         file.write(total)
         file.write(';minutes')
+        file.write('\n') 
+        #correlation with scope
+        l1 = list(df_scope['reglog'])
+        l2 = list(df_scope['rate'])
+        reg = linregress(l1,l2)
+        coeff = str(reg.rvalue) 
+        file.write('coeff_scope: ')     
+        file.write(';')   
+        file.write(coeff)        
+        file.write('\n')  
+        #correlation with coeff of logistic regression
+        l1 = list(df_reglog['reglog'])
+        l2 = list(df_reglog['rate'])
+        reg = linregress(l1,l2)
+        coeff = str(reg.rvalue) 
+        file.write('coeff_scope: ')  
+        file.write(';')     
+        file.write(coeff)        
+        file.write('\n') 
 #####################################################################################
-def layers_analysis_distributions(bdd,weight,metric, model_name, computer, freqmod,k = 1):
-    '''
-    something like a main, but in a function (with all previous function)
-    ,also, load paths, models/weights parameters and write log file
-
-    *k:index of the loop, default is 1*
-    '''
-    if computer == 'sonia': #databases aren't in repo bc they need to be in DATA partition of the pc (more space)
-        if bdd == 'CFD':
-            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/labels_CFD.csv'
-            images_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/images'
-            log_path ='../../results/CFD/log_'
-        elif bdd == 'JEN':
-            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/labels_JEN.csv'
-            images_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/images'
-            log_path ='../../results/JEN/log_'
-        elif bdd == 'SCUT-FBP':
-            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
-            images_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/images'
-            log_path ='../../results/SCUT-FBP/log_'
-        elif bdd == 'MART':
-            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/labels_MART.csv'
-            images_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/images'
-            log_path ='../../results/MART/log_'
-        elif bdd == 'SMALLTEST':
-            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/small_test/labels_test.csv'
-            images_path ='/media/sonia/DATA/data_nico/data/redesigned/small_test/images'
-            log_path ='../../results/smalltest/log_'
-        elif bdd == 'BIGTEST':        
-            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/labels_bigtest.csv'
-            images_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/images'
-            log_path ='../../results/bigtest/log_'
-
-    else: #all paths are relative paths
-        if bdd == 'CFD':
-            labels_path ='../../data/redesigned/CFD/labels_CFD.csv'
-            images_path ='../../data/redesigned/CFD/images'
-            log_path ='../../data/redesigned/CFD/log_'
-        elif bdd == 'JEN':
-            labels_path ='../../data/redesigned/JEN/labels_JEN.csv'
-            images_path ='../../data/redesigned/JEN/images'
-            log_path ='../../data/redesigned/JEN/log_correlations_JEN'
-        elif bdd == 'SCUT-FBP':
-            labels_path ='../../data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
-            images_path ='../../data/redesigned/SCUT-FBP/images'
-            log_path ='../../data/redesigned/SCUT-FBP/log_'
-        elif bdd == 'MART':
-            labels_path ='../../data/redesigned/MART/labels_MART.csv'
-            images_path ='../../data/redesigned/MART/images'
-            log_path ='../../data/redesigned/MART/log_'
-        elif bdd == 'SMALLTEST':
-            labels_path ='../../data/redesigned/small_test/labels_test.csv'
-            images_path ='../../data/redesigned/small_test/images'
-            log_path ='../../data/redesigned/small_test/log_'
-        elif bdd == 'BIGTEST':
-            labels_path ='../../data/redesigned/big_test/labels_bigtest.csv'
-            images_path ='../../data/redesigned/big_test/images'
-            log_path ='../../data/redesigned/big_test/log_'
-    #####################################################################################
-    if model_name == 'VGG16':
-        if weight == 'imagenet':
-            model = VGG16(weights = 'imagenet')
-            layers = ['input_1','block1_conv1','block1_conv2','block1_pool','block2_conv1', 'block2_conv2','block2_pool',
-            'block3_conv1','block3_conv2','block3_conv3','block3_pool','block4_conv1','block4_conv2','block4_conv3',
-            'block4_pool', 'block5_conv1','block5_conv2','block5_conv3','block5_pool','flatten','fc1', 'fc2'] 
-            flatten_layers = ['fc1','fc2','flatten']
-        elif weight == 'vggface':
-            model = VGGFace(model = 'vgg16', weights = 'vggface')
-            layers = ['input_1','conv1_1','conv1_2','pool1','conv2_1','conv2_2','pool2','conv3_1','conv3_2','conv3_3',
-            'pool3','conv4_1','conv4_2','conv4_3','pool4','conv5_1','conv5_2','conv5_3','pool5','flatten',
-            'fc6/relu','fc7/relu']
-            flatten_layers = ['flatten','fc6','fc6/relu','fc7','fc7/relu','fc8','fc8/softmax']
-    elif model_name == 'resnet50':
-        if weight == 'imagenet': 
-            print('error, model not configured')
-        elif weight == 'vggfaces':
-            print('error, model not configured')
-    #####################################################################################
-    # VARIABLES:
-    #####################################################################################
-    dict_compute_metric = {}
-    dict_labels = {}
-    #####################################################################################
-    # CODE:
-    #####################################################################################
-    if metric == 'kurtosis':
-        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
-
-    if metric == 'L0':
-        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
-
-    if metric == 'L1':
-        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod,k)
-
-    if metric == 'gini_flatten':
-        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', 'gini', freqmod, k)
-
-    if metric == 'gini_channel':
-        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'channel', 'gini', freqmod, k)
-
-    if metric == 'gini_filter':
-        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'filter', 'gini', freqmod, k)
-
-
-
-    parse_rates(labels_path, dict_labels)
-    df_metrics = spl.create_dataframe(dict_labels, dict_compute_metric)
-
-    #####################################################################################
-    #écriture des histogrammes
-    #####################################################################################   
-    fusion = []
-    
-    for layer in layers:
-        if layer[0:5] == 'input':
-            layer = 'input' + '_' + str(k)         
-        fusion = list(itertools.chain(fusion, list(df_metrics[layer])))
-
-    title = 'distrib_'+ bdd +'_'+ weight +'_'+ metric   
-    plt.hist(fusion, bins = 40)        
-    plt.title(title, fontsize=10)                 
-    plt.savefig(log_path +'_'+ bdd +'_'+ weight +'_'+ metric +'.png')
-    plt.clf()
-
-
-
-
-
-            

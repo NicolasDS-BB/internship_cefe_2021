@@ -21,12 +21,12 @@ import statistics as st
 PIL.Image.MAX_IMAGE_PIXELS = 30001515195151997
 478940                             
 #bdd = 'BIGTEST' #'CFD','SCUT-FBP','MART','JEN','SMALLTEST','BIGTEST'
-list_bdd = ['CFD'] #"['CFD','MART','JEN','SCUT-FBP']"
+list_bdd = ['SMALLTEST'] #"['CFD','MART','JEN','SCUT-FBP']"
 model_name = 'VGG16'  # 'vgg16, resnet (...)'
 #weights = 'vggface' #'imagenet','vggface'
 list_weights = ['vggface'] #['vggface','imagenet','vggplace']
-list_metrics = ['L0','L1','gini_flatten','kurtosis'] #['L0','L1','gini_flatten','gini_channel','gini_filter','kurtosis']
-computer = 'sonia'
+list_metrics = ['gini_flatten'] #['L0','L1','gini_flatten','gini_channel','gini_filter','kurtosis']
+computer = 'LINUX-ES03'
 freqmod = 10 #frequency of prints, if 5: print for 1/5 images
 #####################################################################################
 #CODE
@@ -37,8 +37,8 @@ for bdd in list_bdd:
     for weight in list_weights:
         for metric in list_metrics:
             print('############################################################_STEP: ',k,'/',l,'  ',bdd,', ',weight,', ',metric)
-            #spl.layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k)
-            spl.layers_analysis_distributions(bdd,weight,metric, model_name, computer, freqmod,k)
+            spl.layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k)            
             k += 1
 
 
+ 

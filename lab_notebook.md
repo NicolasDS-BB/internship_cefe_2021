@@ -355,29 +355,49 @@ que c'est plus optimal qu'un dict dans ce cas précis, en terme de rapidité (je
 - calcul de la norme L0 sur CFD: résultats bizarres
 - implmentation de vgg place et test sur JEN
 
-# 04
+# 04/06/2021
+
+- découverte d'un site de mesure online de l'attractivié a partir d'un cnn entrainé sur scut: https://www.hownormalami.eu/
+- idée: regarder si la distribution des métriques toute couche confondue est bimodale (ce qui pourrait expliquer la sigmoIde)
 
 
 # 07/06/2021
 
-- résultats JEN vgg face: gini robuste au changement de datbase contrairement a L1
+- résultats JEN vgg face: gini robuste au changement de database contrairement a L1
 
+# 08/06/2021
+
+- régression logistique sur (x: le n de la couche, y: les valeurs des métriques
+
+# 09/06/2021s
+
+# 10/06/2021
+
+# 11/06/2021
+
+# 14/06/2021
+
+# 15/06/2021
+
+Lecture et préparation de questions sur l'article Charpentier et al 2021 PNAS
+
+# 16/06/2021
 
 
 # TODO
-- créer nouvel environement (gut + data) sur le "nouveau" pc 
 - lire le papier de Mao sur la granularité, trouver une métrique de granularité
-- sur une image, plot de la distribution ds activations par couche (le faire plusieurs fois, mais par image)
-- idem sur un batch de 50 images (comme déja fait) mais préciser les métriques (toutes) dans le titre, avec les corrélations
+- Gompertz: https://benzekry.perso.math.cnrs.fr/DONNEES/models_fitting.html
+- tester d'autres mesures que le coeff sur la regression logistique: growth rate, R, T0 (point d'inflexion bas)
+- comparer le fit de plusieurs fonctions (logit, gompertz) avec la min square error
+- écrire les fonctions du progrmme sous forme de formules mathématiques
+- faire un GLM aec toutes les couches (linéaire, logistique, sparse PLS etc...)
+- séléction du modèle: matrices de corrélation sur toutes les variables, quand deux sont a plus de 0,7, on concerve celle qui a le meilleur R2
 - pour les corrélations: plotter avant, pour voir si pearson est le mieux, maybe tester spearman
 - faire un gdoc avec les résultats (mettre la date dans le titre + sauvegarde automatique? )
-- métrique sur l'évolution de la métrique sur le diag en baton: (sur la métrique ou sur la corrélation?)
-    + faire la différence entre le plus grand baton et le plus petit (ie max et min de la sigmoide tant est qu'il y ai une sigmoide)
-    + calculer la pente max sur la partie croissante de la sigmoîde, (ie max d ela dérivée) --> y a t'il une métrique pour faire ça sur une évolution discrète --> biblio
-
-
-
-
+- regarder si il y a un effet d'interaction de la complexité sur la sparsité par couche
+- nouvelles métriques: pas oublier sparsité/complexité (pas dans le même modèle, quoi que ? )
+- Matrice de Gram, utilisée pour caractériser le style en transfert de style
+- lire https://www.nature.com/articles/s41467-021-22078-3, regarder l'optimisation des calculs sur les couches intermédiaires https://osf.io/35fmh/
 - appliquer les conseils de Rufin, cf livre de géron, cf réunion du 08/04
 - reproduire les résultats de la publi sur la complexité des imagees --> ou attendre que la coautrice les envoie comme elle s'y est engagée
 - écouter:
