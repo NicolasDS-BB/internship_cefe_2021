@@ -369,39 +369,67 @@ que c'est plus optimal qu'un dict dans ce cas précis, en terme de rapidité (je
 
 - régression logistique sur (x: le n de la couche, y: les valeurs des métriques
 
-# 09/06/2021s
+# 09/06/2021  
+
+pas de rédaction du cahier de labo --> 10 pompes
 
 # 10/06/2021
 
+pas de rédaction du cahier de labo --> 10 pompes
+
 # 11/06/2021
+
+pas de rédaction du cahier de labo --> 10 pompes
 
 # 14/06/2021
 
+pas de rédaction du cahier de labo --> 10 pompes
+
 # 15/06/2021
 
-Lecture et préparation de questions sur l'article Charpentier et al 2021 PNAS
+- Lecture et préparation de questions sur l'article Charpentier et al 2021 PNAS
+- Lecture du papier de Mao sur la granularité: pas tellement intéressant
+- découpage des fonctions en plus petites fonctions
+- découverte de la différence entre objets muables et non muables: c'est bien après 2 ans de python
 
 # 16/06/2021
 
+- finalisation du découpages en fonction et en sous-packages, suppression des imports inutiles, 
+- commentaires et structuration du code: un travail long et fastidieux
+
+# 17/06/2021
+
+
+
 
 # TODO
-- lire le papier de Mao sur la granularité, trouver une métrique de granularité
+
+## lire
 - Gompertz: https://benzekry.perso.math.cnrs.fr/DONNEES/models_fitting.html
+- lire https://www.nature.com/articles/s41467-021-22078-3, regarder l'optimisation des calculs sur les couches intermédiaires https://osf.io/35fmh/
+
+## coder
+- mettre les métriques entre 0 et 1 pour la regression logistique
 - tester d'autres mesures que le coeff sur la regression logistique: growth rate, R, T0 (point d'inflexion bas)
 - comparer le fit de plusieurs fonctions (logit, gompertz) avec la min square error
-- écrire les fonctions du progrmme sous forme de formules mathématiques
-- faire un GLM aec toutes les couches (linéaire, logistique, sparse PLS etc...)
-- séléction du modèle: matrices de corrélation sur toutes les variables, quand deux sont a plus de 0,7, on concerve celle qui a le meilleur R2
+- faire un GLM avec toutes les couches (linéaire, logistique, sparse PLS etc...)
 - pour les corrélations: plotter avant, pour voir si pearson est le mieux, maybe tester spearman
-- faire un gdoc avec les résultats (mettre la date dans le titre + sauvegarde automatique? )
+- mettre la date dans le titre des résultas
 - regarder si il y a un effet d'interaction de la complexité sur la sparsité par couche
-- nouvelles métriques: pas oublier sparsité/complexité (pas dans le même modèle, quoi que ? )
-- Matrice de Gram, utilisée pour caractériser le style en transfert de style
-- lire https://www.nature.com/articles/s41467-021-22078-3, regarder l'optimisation des calculs sur les couches intermédiaires https://osf.io/35fmh/
 - appliquer les conseils de Rufin, cf livre de géron, cf réunion du 08/04
+
+## faire
+- écrire les fonctions du programme sous forme de formules mathématiques
+- séléction du modèle: matrices de corrélation sur toutes les variables, quand deux sont a plus de 0,7, on concerve celle qui a le meilleur R2
+- nouvelles métriques: pas oublier sparsité/complexité (pas dans le même modèle, quoi que ? )
 - reproduire les résultats de la publi sur la complexité des imagees --> ou attendre que la coautrice les envoie comme elle s'y est engagée
-- écouter:
-	+ https://avisdexperts.ch/videos/view/10980 
+
+## autres
+- Matrice de Gram, utilisée pour caractériser le style en transfert de style
+
+
+
+
 
 
 

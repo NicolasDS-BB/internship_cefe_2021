@@ -1,20 +1,27 @@
 #!/usr/bin/env python
 #####################################################################################
+# DESCRIPTION:
+#####################################################################################
+#[EN]Main program for calculating sparsity correlated metrics on neural network middle layers. 
+#Loop on the combinatorics of the parameters (databases, weights, model etc)
+#Choice of these parameters below. 
+
+#[FR]Programme principal du calcul de métriques corrélées à la sparsité sur les couches intermédiaires de réseaux de neurones. 
+# Boucle sur les combinatoires des paramètres (bases de données, poids, modèle etc)
+# Choix de ces paramètres ci dessous. 
+
+#####################################################################################
 # LIBRAIRIES:
 #####################################################################################
+#public librairies
 import os
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-import time
-t0 = time.time()
-from tensorflow.keras.applications.vgg16 import VGG16
-from keras_vggface.vggface import VGGFace
-from scipy.stats import linregress
 import PIL
 import sys
+#personnal librairies
 sys.path.insert(1,'../../code/functions')
-import sparsenesslib as spl #personnal library
-import statistics as st
+import sparsenesslib.high_level as spl
 #####################################################################################
 #SETTINGS:
 #####################################################################################
@@ -25,9 +32,9 @@ list_bdd = ['SMALLTEST'] #"['CFD','MART','JEN','SCUT-FBP']"
 model_name = 'VGG16'  # 'vgg16, resnet (...)'
 #weights = 'vggface' #'imagenet','vggface'
 list_weights = ['vggface'] #['vggface','imagenet','vggplace']
-list_metrics = ['gini_flatten'] #['L0','L1','gini_flatten','gini_channel','gini_filter','kurtosis']
-computer = 'LINUX-ES03'
-freqmod = 10 #frequency of prints, if 5: print for 1/5 images
+list_metrics = ['L0'] #['L0','L1','gini_flatten','gini_channel','gini_filter','kurtosis']
+computer = 'LINUX-ES03' #no need to change that unless it's sonia's pc, that infamous thing; in which case, put 'sonia' in parameter.
+freqmod = 1 #frequency of prints, if 5: print for 1/5 images
 #####################################################################################
 #CODE
 #####################################################################################
@@ -39,6 +46,7 @@ for bdd in list_bdd:
             print('############################################################_STEP: ',k,'/',l,'  ',bdd,', ',weight,', ',metric)
             spl.layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k)            
             k += 1
+#####################################################################################
 
 
  
