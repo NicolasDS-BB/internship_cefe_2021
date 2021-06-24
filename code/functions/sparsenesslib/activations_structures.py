@@ -5,14 +5,15 @@
 #[EN]The metrics can be computed in several ways on the layers, these different functions prtmettent to apply these different ways
 #A mathematical formalization, with formulas, will be produced to describe them formally
 
-#[FR]Les métriques peuvent être calculées de plusieurs manières sur les couches, ces différentes fonctions prtmettent d'appliquer ces différentes façons de faire
-# Une formalisation mathématique, avec des formules, sera produite pour les décrire formellement
+#[FR]Les métriques peuvent être calculées de plusieurs manières sur les couches, ces différentes fonctions prtmettent d'appliquer ces 
+# différentes façons de faire. Une formalisation mathématique, avec des formules, sera produite pour les décrire formellement
 
 #1. compute_filter: Compute chosen formula (gini, treve-rolls, l1 norm...) for each filter (flatten), and compute the mean of them
 
-#2. compute_flatten: Create a flatten vector from each layer and compute chosen formula (gini, treve-rolls, l1 norm...) on it"
+#2. compute_flatten: Create a flatten vector from each layer and compute chosen formula (gini, treve-rolls, l1 norm...) on it
 
-#3. compute_channel: Compute chosen formula (gini, treve-rolls, l1 norm...) for each channel (1D vector on z dimension), and compute the mean of them
+#3. compute_channel: Compute chosen formula (gini, treve-rolls, l1 norm...) for each channel (1D vector on z dimension), and 
+# compute the mean of them
 
 #4. compute_activations: Executes one of the 3 previous functions according to the approach passed in parameter
 
@@ -43,7 +44,7 @@ def compute_filter(activations, activations_dict,layer,formula,k):
     liste = list(tuple)    
     nb_channels = liste[3] 
 
-    for each in range(0, nb_channels-1): #on itère sur chaque filtre (profondeur)
+    for each in range(0, nb_channels-1): 
         filter.append([])
         index_row = 0
         for row in activations[layer][0]:
@@ -58,7 +59,7 @@ def compute_filter(activations, activations_dict,layer,formula,k):
     for each in filter:
         if formula == 'L0':                
             filter_metrics.append(1 - (norm(each, 0)/len(each)))
-        if formula == 'L1':                
+        elif formula == 'L1':                
             filter_metrics.append(norm(each, 1))
         elif formula == 'treve-rolls':
             filter_metrics.append(metrics.treves_rolls(each))
@@ -66,6 +67,7 @@ def compute_filter(activations, activations_dict,layer,formula,k):
             filter_metrics.append(metrics.gini(each))
         elif formula == 'kurtosis':
             filter_metrics.append(scipy.stats.kurtosis(each))
+        else: print('ERROR: formula setting isnt L0, L1, treve-rolls, gini or kurtosis')
     activations_dict[layer] = st.mean(filter_metrics)
 
 ####################################################/length#################################
@@ -79,7 +81,7 @@ def compute_flatten(activations, activations_dict,layer,formula,k):
     arr = activations[layer].flatten()
     if formula == 'L0':    
         activations_dict[layer] = (1 - (norm(arr, 0)/len(arr)))
-    if formula == 'L1':    
+    elif formula == 'L1':    
         activations_dict[layer] = (norm(arr, 1))        
     elif formula == 'treve-rolls':        
         activations_dict[layer] = (metrics.treves_rolls(arr))
@@ -87,6 +89,7 @@ def compute_flatten(activations, activations_dict,layer,formula,k):
         activations_dict[layer] = (metrics.gini(arr))
     elif formula == 'kurtosis':
         activations_dict[layer] = (scipy.stats.kurtosis(arr))
+    else: print('ERROR: formula setting isnt L0, L1, treve-rolls, gini or kurtosis')
 #####################################################################################
 def compute_channel(activations, activations_dict,layer,formula,k):
     '''
@@ -112,6 +115,7 @@ def compute_channel(activations, activations_dict,layer,formula,k):
                 channels.append(metrics.gini(channel))
             elif formula == 'kurtosis':
                 channels.append(scipy.stats.kurtosis(channel))
+            else: print('ERROR: formula setting isnt L0, L1, treve-rolls, gini or kurtosis')
             index_column += 1
         index_row += 1    
     activations_dict[layer] = st.mean(channels)
@@ -119,8 +123,7 @@ def compute_channel(activations, activations_dict,layer,formula,k):
 def compute_activations(layers, flatten_layers, computation, activations, activations_dict,formula, k):
     '''
     executes one of the 3 previous functions according to the approach passed in parameter
-    '''
-        
+    '''        
     for layer in layers:            
         if computation == 'channel':                
             if layer in flatten_layers:
@@ -133,6 +136,6 @@ def compute_activations(layers, flatten_layers, computation, activations, activa
             else:                     
                 compute_filter(activations, activations_dict, layer, formula,k)
         elif computation == 'flatten':
-            compute_flatten(activations, activations_dict, layer, formula,k)            
-                
+            compute_flatten(activations, activations_dict, layer, formula,k)                
         else: print('ERROR: computation setting isnt channel or flatten')
+#####################################################################################

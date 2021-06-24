@@ -1,0 +1,10 @@
+'metric',CFD','MART','JEN','SCUT-FBP','SMALLTEST','BIGTEST',
+L0,F , , ,FI, , , 
+L1, , , ,, , ,
+Gini_flatten, , , ,FI, , ,
+Gini_filter, , , , , , ,
+Gini_channel, , , , , , ,
+Kurtosis, , , ,FI, , ,
+
+
+F = compute for VGGFace, I = compute for imagenet, P = compute for VGGPlaces

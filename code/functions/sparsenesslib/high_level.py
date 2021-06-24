@@ -30,10 +30,15 @@ from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.applications.vgg16 import VGG16
 from keras_vggface.vggface import VGGFace
 from scipy.stats import linregress
+from sklearn.linear_model import LinearRegression
 import sys
 import statistics as st
+from scipy import stats
 from datetime import date
-
+import pandas
+import matplotlib.pyplot as plt
+import numpy as np
+import json
 #personnal librairies
 sys.path.insert(1,'../../code/functions')
 import sparsenesslib.metrics as metrics
@@ -68,7 +73,7 @@ def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_out
         acst.compute_activations(layers, flatten_layers, computation, activations, activations_dict,formula,k)
         dict_output[each] = activations_dict
 #####################################################################################
-def write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, layers, k, t0):    
+def write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, layers, k):    
     '''
     Writes the results of the performed analyses and their metadata in a structured csv file with 
     - a header line, 
@@ -80,7 +85,7 @@ def write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, l
     today = date.today()
     today = str(today)
 
-    with open(log_path +'_'+bdd+'_'+weight+'_'+metric+'_'+today+'.csv',"w") as file:            
+    with open(log_path +'_'+bdd+'_'+weight+'_'+metric+'_'+today+'_ANALYSE'+'.csv',"w") as file:            
         #HEADER
         file.write('layer'+';'+'mean_'+str(metric)+';'+'sd_'+str(metric)+';'+'corr_beauty_VS_'+'metric'+';'+'pvalue'+';'+'\n')
         #VALUES for each layer
@@ -96,10 +101,10 @@ def write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, l
             file.write(str(st.stdev(l1))+';')            
             #correlation with beauty
             l1 = list(df_metrics[layer])
-            l2 = list(df_metrics['rate'])
+            l2 = list(df_metrics['rate']) 
             reg = linregress(l1,l2)
-            coeff = str(reg.rvalue)         
-            file.write(coeff +';')             
+            r = str(reg.rvalue)         
+            file.write(r +';')             
             #pvalue
             pvalue = str(reg.pvalue) 
             file.write(pvalue+';'+'\n')   
@@ -108,11 +113,7 @@ def write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, l
         file.write('##############'+'\n')        
         file.write('bdd;'+ bdd + '\n')        
         file.write('weights;'+ weight + '\n')         
-        file.write('metric;'+ metric + '\n')  
-        t1 = time.time()      
-        total = (t1-t0)/60
-        total = str(total)
-        file.write("time:;"+total+';minutes'+'\n')        
+        file.write('metric;'+ metric + '\n')            
         file.write("date:;"+today+'\n')
         #correlation with scope
         l1 = list(df_scope['reglog'])        
@@ -121,14 +122,13 @@ def write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, l
         coeff = str(reg.rvalue) 
         file.write('coeff_scope: ;'+coeff+'\n') 
         #correlation with coeff of logistic regression
-        l1 = list(df_reglog['reglog'])
-        print('reglog:   ', l1)
+        l1 = list(df_reglog['reglog'])        
         l2 = list(df_reglog['rate'])
         reg = linregress(l1,l2)
         coeff = str(reg.rvalue) 
         file.write('coeff_reglog: ;'+coeff+'\n')  
 #####################################################################################
-def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k = 1):
+def extract_metrics(bdd,weight,metric, model_name, computer, freqmod,k = 1):
     '''
     something like a main, but in a function (with all previous function)
     ,also, load paths, models/weights parameters and write log file
@@ -225,11 +225,85 @@ def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k = 1):
         compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'filter', 'gini', freqmod, k)
     
     spm.parse_rates(labels_path, dict_labels)
-    df_metrics = spm.create_dataframe(dict_labels, dict_compute_metric)    
+    df_metrics = spm.create_dataframe(dict_labels, dict_compute_metric) 
+
+    today = date.today()
+    today = str(today)
+
+    df_metrics.to_json(path_or_buf = log_path+'_'+bdd+'_'+weight+'_'+metric+'_'+'_BRUTMETRICS'+'.csv')
+#####################################################################################
+def analyse_metrics(model_name, computer, bdd, weight, metric,k):
     
+    #récupération du nom des couches
+    if model_name == 'VGG16':
+        if weight == 'imagenet':
+            layers = ['input_1','block1_conv1','block1_conv2','block1_pool','block2_conv1', 'block2_conv2','block2_pool',
+            'block3_conv1','block3_conv2','block3_conv3','block3_pool','block4_conv1','block4_conv2','block4_conv3',
+            'block4_pool', 'block5_conv1','block5_conv2','block5_conv3','block5_pool','flatten','fc1', 'fc2'] 
+        elif weight == 'vggface':
+            layers = ['input_1','conv1_1','conv1_2','pool1','conv2_1','conv2_2','pool2','conv3_1','conv3_2','conv3_3',
+            'pool3','conv4_1','conv4_2','conv4_3','pool4','conv5_1','conv5_2','conv5_3','pool5','flatten',
+            'fc6/relu','fc7/relu']
+    elif model_name == 'resnet50':
+        if weight == 'imagenet': 
+            print('error, model not configured')
+        elif weight == 'vggfaces':
+            print('error, model not configured')  
+
+    #path d'enregistrement des résultats
+    if computer == 'sonia': #databases aren't in repo bc they need to be in DATA partition of the pc (more space)
+        if bdd == 'CFD':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/CFD/labels_CFD.csv'
+            log_path ='../../results/CFD/log_'
+        elif bdd == 'JEN':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/JEN/labels_JEN.csv'
+            log_path ='../../results/JEN/log_'
+        elif bdd == 'SCUT-FBP':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+            log_path ='../../results/SCUT-FBP/log_'
+        elif bdd == 'MART':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/MART/labels_MART.csv'
+            log_path ='../../results/MART/log_'
+        elif bdd == 'SMALLTEST':
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/small_test/labels_test.csv'
+            log_path ='../../results/smalltest/log_'
+        elif bdd == 'BIGTEST':        
+            labels_path ='/media/sonia/DATA/data_nico/data/redesigned/big_test/labels_bigtest.csv'
+            log_path ='../../results/bigtest/log_'
+
+    else: #for others configurations,all paths are relative paths in git repository
+        if bdd == 'CFD':
+            labels_path ='../../data/redesigned/CFD/labels_CFD.csv'
+            log_path ='../../results/CFD/log_'
+        elif bdd == 'JEN':
+            labels_path ='../../data/redesigned/JEN/labels_JEN.csv'
+            log_path ='../../results/JEN/log_'
+        elif bdd == 'SCUT-FBP':
+            labels_path ='../../data/redesigned/SCUT-FBP/labels_SCUT_FBP.csv'
+            log_path ='../../results/SCUT-FBP/log_'
+        elif bdd == 'MART':
+            labels_path ='../../data/redesigned/MART/labels_MART.csv'
+            log_path ='../../results/MART/log_'
+        elif bdd == 'SMALLTEST':                       
+            labels_path ='../../data/redesigned/small_test/labels_test.csv'
+            log_path ='../../results/smalltest/log_'            
+        elif bdd == 'BIGTEST':
+            labels_path ='../../data/redesigned/big_test/labels_bigtest.csv'
+            log_path ='../../results/bigtest/log_'  
+
+    #chargement des noms des images
+    dict_labels = {}
+    spm.parse_rates(labels_path, dict_labels)
+    #chargement des données  
+    data = json.load(open(log_path+'_'+bdd+'_'+weight+'_'+metric+'_'+'_BRUTMETRICS'+'.csv', "r"))    
+    df_metrics = pandas.DataFrame.from_dict(data)    
+    #df_metrics = pandas.read_json(path_or_buf= log_path+'_'+bdd+'_'+weight+'_'+metric+'_'+'_BRUTMETRICS'+'.csv')
     #écriture des histogrammes      
     metrics.histplot_metrics(layers, df_metrics, bdd, weight, metric, log_path,k)    
-    #régression logistique    
+    #régression logistique   
+    if metric in ['kurtosis','L0']:        
+        df_metrics = metrics.compress_metric(df_metrics, metric)   
+        
     df_reglog = metrics.reglog(layers, df_metrics, dict_labels) 
     #minimum - maximum     
     df_scope = metrics.minmax(df_metrics,dict_labels)    
@@ -237,5 +311,6 @@ def layers_analysis(bdd,weight,metric, model_name, computer, freqmod,k = 1):
     '''df_gompertz = metrics.reg_gompertz()'''
     #écriture du fichier    
 
-    write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, layers, k, t0)    
+    write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, layers, k)    
 #####################################################################################
+

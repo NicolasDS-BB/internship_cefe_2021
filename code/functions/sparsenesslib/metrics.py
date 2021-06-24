@@ -22,6 +22,9 @@
 
 #7. histplot_metrics: Plot a histogram of the distribution of metrics for all images regardless of the layer in which they were calculated
 
+#8. compress_metrics: If metrics values aren't between 0 and 1, like kurtosis or L0 norm, change theme like this to let them availaible 
+#for logistic regression. 1 will be th highest value of the metric, 0 the lowest.
+
 #####################################################################################
 # LIBRAIRIES:
 #####################################################################################
@@ -74,10 +77,8 @@ def reglog(layers, df_metrics,dict_labels):
     x = []  
     for each in range(len(layers)):
         x.append(i)
-        i += 1    
-
-    print(df_metrics)
-    
+        i += 1   
+            
     x = pandas.DataFrame(x) 
 
     dict_reglog = {}
@@ -89,9 +90,6 @@ def reglog(layers, df_metrics,dict_labels):
             if j != 0:
                 y.append(each)
             j += 1       
-
-
-       
 
         picture = list(row)[0]
 
@@ -105,8 +103,6 @@ def reglog(layers, df_metrics,dict_labels):
         result = model.fit()    
         #on récupère le coefficient
         coeff = result.params[0]
-        print(coeff)
-        print('ok')
         dict_reglog[picture] = coeff        
 
     df1 = pandas.DataFrame.from_dict(dict_labels, orient='index', columns = ['rate'])
@@ -179,4 +175,53 @@ def histplot_metrics(layers, df_metrics, bdd, weight, metric, log_path,k):
     plt.title(title, fontsize=10)                 
     plt.savefig(log_path +'_'+ bdd +'_'+ weight +'_'+ metric +'.png')
     plt.clf()
+#####################################################################################
+def compress_metric(df_metrics, metric):
+    '''
+    If metrics values aren't between 0 and 1, like kurtosis or L0 norm, change theme like this
+    to let them availaible for logistic regression. 1 will be th highest value of the metric, 0 the lowest.
+    '''
+    vmax = 0
+    vmin = 0
+
+    #suppression temporaire de la note
+    rates = df_metrics.pop('rate')     
+
+    #récupération de la valeur minimale
+    j = 0
+    for row in df_metrics.index:        
+        i = 0
+        for index_row, row in df_metrics.iterrows():                     
+            for column in row:           
+                if i != 0:                                
+   
+                    if column < vmin:
+                        vmin = column                 
+            i += 1
+        j += 1
+    
+    print('vmin:', vmin)
+
+    #transformation des valeurs pour qu'elles soient strictement positives    
+    df_metrics = df_metrics.applymap(lambda x: x + abs(vmin)) 
+
+    #récupération de la valeur maximale
+    j = 0
+    for row in df_metrics.index:        
+        i = 0
+        for index_row, row in df_metrics.iterrows():                     
+            for column in row:           
+                if i != 0:                                
+                    if column > vmax:
+                        vmax = column                   
+            i += 1
+        j += 1   
+     
+    #transformation des valeurs pour qu'elles soient entre 0 et 1    
+    df_metrics = df_metrics.applymap(lambda x: x/vmax) 
+
+    #ajout de la note
+    df_metrics.insert(0, 'rate', rates, allow_duplicates=False)    
+
+    return df_metrics
 #####################################################################################

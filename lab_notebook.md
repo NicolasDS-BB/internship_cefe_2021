@@ -399,33 +399,58 @@ pas de rédaction du cahier de labo --> 10 pompes
 
 # 17/06/2021
 
+biliographie sur les travaux antérieurs du projet mandrill
+
+# 18/06/2021
+
+- stockage les dictionnaires des métriques dans des jsons avant de calculer les moyennes pour avoir une archive et faire différnetes choses
+avec sans tout recalculer a chaque fois
+- séparation du programme en deux mains:
+	+ un pour calculer les métriques sur les couches (super long mais une fois que ce sera fait, d'ici une diaine de jours, ça sera bon)
+	+ un pour tester le modèle, plus exporatoire et "bricolage", qui uttilise les résultats du programme précédent 
+	+ plot des corrélations: pearson semble effectivement plus adapté que spearman
+
+# 21/06/2021
+
+- lecture de quelques papiers de MC conseillés par Sonia
 
 
+# 22/06/2021
+
+- rendez vous avec Marie Charpentier pour mieux comprendre la problématique et les enjeux
+- discussion avec julien sur l'idée de faire du reinforcment learning
+- "régularisatio" entre 0 et 1 des métriques qui ne le sont pas, pour la régression logistique (fonction compress_metrics())
+
+# 23/06/2021
+
+matinée en congés
+
+# 24/06/2021
 
 # TODO
 
 ## lire
-- Gompertz: https://benzekry.perso.math.cnrs.fr/DONNEES/models_fitting.html
-- lire https://www.nature.com/articles/s41467-021-22078-3, regarder l'optimisation des calculs sur les couches intermédiaires https://osf.io/35fmh/
+	- Gompertz: https://benzekry.perso.math.cnrs.fr/DONNEES/models_fitting.html
+	- lire https://www.nature.com/articles/s41467-021-22078-3, regarder l'optimisation des calculs sur les couches intermédiaires https://osf.io/35fmh/
 
-## coder
-- mettre les métriques entre 0 et 1 pour la regression logistique
-- tester d'autres mesures que le coeff sur la regression logistique: growth rate, R, T0 (point d'inflexion bas)
-- comparer le fit de plusieurs fonctions (logit, gompertz) avec la min square error
-- faire un GLM avec toutes les couches (linéaire, logistique, sparse PLS etc...)
-- pour les corrélations: plotter avant, pour voir si pearson est le mieux, maybe tester spearman
-- mettre la date dans le titre des résultas
-- regarder si il y a un effet d'interaction de la complexité sur la sparsité par couche
-- appliquer les conseils de Rufin, cf livre de géron, cf réunion du 08/04
+## coder	
+	- réparer vgg places
+	- tester d'autres mesures que le coeff sur la regression logistique: growth rate, R, T0 (point d'inflexion bas)
+	- comparer le fit de plusieurs fonctions (logit, gompertz) avec la min square error
+	- faire un GLM avec toutes les couches (linéaire, logistique, sparse PLS etc...)
+	- regarder si il y a un effet d'interaction de la complexité sur la sparsité par couche
+
+### Partie 2 du stage:  
+	- appliquer les conseils de Rufin, cf livre de géron, cf réunion du 08/04
 
 ## faire
-- écrire les fonctions du programme sous forme de formules mathématiques
-- séléction du modèle: matrices de corrélation sur toutes les variables, quand deux sont a plus de 0,7, on concerve celle qui a le meilleur R2
-- nouvelles métriques: pas oublier sparsité/complexité (pas dans le même modèle, quoi que ? )
-- reproduire les résultats de la publi sur la complexité des imagees --> ou attendre que la coautrice les envoie comme elle s'y est engagée
+	- écrire les fonctions du programme sous forme de formules mathématiques
+	- séléction du modèle: matrices de corrélation sur toutes les variables, quand deux sont a plus de 0,7, on concerve celle qui a le meilleur R2
+	- nouvelles métriques: pas oublier sparsité/complexité (pas dans le même modèle, quoi que ? )
+	- reproduire les résultats de la publi sur la complexité des imagees --> ou attendre que la coautrice les envoie comme elle s'y est engagée
 
 ## autres
-- Matrice de Gram, utilisée pour caractériser le style en transfert de style
+	- Matrice de Gram, utilisée pour caractériser le style en transfert de style
 
 
 
