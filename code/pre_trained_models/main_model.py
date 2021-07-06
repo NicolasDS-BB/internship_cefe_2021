@@ -26,11 +26,11 @@ import sparsenesslib.high_level as hl
 PIL.Image.MAX_IMAGE_PIXELS = 30001515195151997
 478940                             
 #'CFD','SCUT-FBP','MART','JEN','SMALLTEST','BIGTEST'
-list_bdd = ['MART'] #"['CFD','MART','JEN','SCUT-FBP','SMALLTEST','BIGTEST']"
+list_bdd = ['CFD','SCUT-FBP','MART','JEN','SMALLTEST','BIGTEST'] #"['CFD','MART','JEN','SCUT-FBP','SMALLTEST','BIGTEST']"
 model_name = 'VGG16'  # 'vgg16, resnet (...)'
 #weights = 'vggface' #'imagenet','vggface'
-list_weights = ['vggface'] #['vggface','imagenet','vggplace']
-list_metrics = ['gini_flatten'] #['L0','L1','gini_flatten','gini_channel','gini_filter','kurtosis']
+list_weights = ['vggface','imagenet'] #['vggface','imagenet','vggplace']
+list_metrics = ['L0','gini_flatten','kurtosis'] #['L0','L1','gini_flatten','gini_channel','gini_filter','kurtosis']
 computer = 'LINUX-ES03' #no need to change that unless it's sonia's pc, that infamous thing; in which case, put 'sonia' in parameter.
 freqmod = 50 #frequency of prints, if 5: print for 1/5 images
 #####################################################################################
