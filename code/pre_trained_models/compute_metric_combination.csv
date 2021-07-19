@@ -1,10 +1,13 @@
 'metric',CFD','MART','JEN','SCUT-FBP','SMALLTEST','BIGTEST',
-L0,FI,,,FI,,, 
+L0,FIP,FIP,FIP,FIP,FIP,FIP, 
 L1,,,,,,,
-Gini_flatten,FI,,,F,,,
+Gini_flatten,FIP,FIP,FIP,FIP,FIP,FIP,
 Gini_filter,,,,,,,
 Gini_channel,,,,,,,
-Kurtosis,FI,,,F,,,
+Kurtosis,FIP,FIP,FIP,FIP,FIP,FIP,
+mean,FIP,FIP,FIP,FI,,,
+entropy,,,,,,,
+complexity,,,,,,,
 
 
 F = compute for VGGFace, I = compute for imagenet, P = compute for VGGPlaces

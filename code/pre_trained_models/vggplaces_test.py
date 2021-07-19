@@ -15,8 +15,8 @@ import pandas
 import statistics as st
 import scipy
 import sys
-sys.path.insert(1,'/home/sonia/Bureau/internship_cefe_2021/code/pre_trained_models/vggplaces')
-import vgg16_places_365 as places
+sys.path.insert(1,'/home/sonia/Bureau/internship_cefe_2021/code/pre_trained_models')
+import vggplaces.vgg16_places_365 as places
 
 
 from tensorflow.keras.applications.vgg16 import VGG16
