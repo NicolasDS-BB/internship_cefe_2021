@@ -35,6 +35,7 @@ import matplotlib.pyplot as plt
 import itertools
 import statsmodels.api as sm
 import scipy.optimize as opt
+from scipy.ndimage import gaussian_filter1d
 #####################################################################################
 # PROCEDURES/FUNCTIONS:
 #####################################################################################
@@ -100,7 +101,7 @@ def reglog(layers, df_metrics,dict_labels):
         x_stat = sm.add_constant(x)
         # on ajuste le modèle
         model = sm.Logit(y, x_stat)
-        result = model.fit()    
+        result = model.fit(disp=0)    
         #on récupère le coefficient
         coeff = result.params[0]
         dict_reglog[picture] = coeff        
@@ -200,8 +201,6 @@ def compress_metric(df_metrics, metric):
             i += 1
         j += 1
     
-    print('vmin:', vmin)
-
     #transformation des valeurs pour qu'elles soient strictement positives    
     df_metrics = df_metrics.applymap(lambda x: x + abs(vmin)) 
 
@@ -225,3 +224,55 @@ def compress_metric(df_metrics, metric):
 
     return df_metrics
 #####################################################################################
+def inflexion_points(df_metrics,dict_labels):
+    '''
+    from here: https://stackoverflow.com/questions/62537703/how-to-find-inflection-point-in-python
+    '''
+    dict_inflexions = {}
+
+    for row in df_metrics.iterrows():
+        y = []
+        j = 0
+        
+        for each in list(row)[1]:
+            if j != 0:
+                y.append(each)
+            j += 1   
+
+        picture = list(row)[0]
+
+
+        smooth = gaussian_filter1d(y, 3)
+
+        # compute second derivative
+        smooth_d2 = np.gradient(np.gradient(smooth))
+
+        smooth_d1 = np.gradient(smooth)
+        
+        y_d1 = np.gradient(y)
+
+        # find switching points
+        infls = np.where(np.diff(np.sign(smooth_d2)))[0]
+
+        coeff = y_d1[max(infls)]
+        
+
+        '''
+        # plot results
+        plt.plot(y, label='Noisy Data')
+        plt.plot(smooth, label='Smoothed Data')
+
+
+        plt.plot(smooth_d2 / np.max(smooth_d2), label='Second Derivative (scaled)')
+        for i, infl in enumerate(infls, 1):
+            plt.axvline(x=infl, color='k', label=f'Inflection Point {i}')
+        plt.legend(bbox_to_anchor=(1.55, 1.0))  ''' 
+           
+
+        dict_inflexions[picture] = coeff     
+
+        #print('infs: ', infls,'longueur: ',len(infls) )
+
+    df1 = pandas.DataFrame.from_dict(dict_labels, orient='index', columns = ['rate'])
+    df2 = pandas.DataFrame.from_dict(dict_inflexions, orient='index', columns = ['reglog'] ) 
+    return pandas.concat([df1, df2], axis = 1)  

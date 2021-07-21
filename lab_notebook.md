@@ -414,7 +414,6 @@ avec sans tout recalculer a chaque fois
 
 - lecture de quelques papiers de MC conseillés par Sonia
 
-
 # 22/06/2021
 
 - rendez vous avec Marie Charpentier pour mieux comprendre la problématique et les enjeux
@@ -423,39 +422,177 @@ avec sans tout recalculer a chaque fois
 
 # 23/06/2021
 
-matinée en congés
+- matinée en congés, après midi: lecture rapide de quelques publis
 
 # 24/06/2021
+- (1)recodage de la partie "analyse des métriques et modèle" en R. 
+- métriques de SCUT-FBP enregistrées en csv et pas en json: erreur de ma part ou bug de la fonction a cause de la grande quantité de données ?
+
+# 25/06/2021
+
+- avancées (fastidieuses) sur la conversion du programme python en R
+
+# 28/06/2021
+
+- avancées sur la conversion du programme python en R
+- test de quelques modèles prenant parfois en compte les effets d'interaction et les effets quadratiques --> résultas intéressants
+
+# 29/06/2021
+
+- abscisse du point d'inflexion: aucune corrélation 
+- discussion sur la thèse 
+- point sur l'organisation sur la suite du stage
+
+
+# 30/06/2021
+
+- lecture de papiers
+
+# 01/07/2021
+
+- la corrélation avec le coeff directeur du point d'inflexion de la sigmoide est assez négative (- 0,32) avec Gini/CFD/VGGFaces mais pas du tout avec L0/CFD /VGGfaces(0,002). Avec  Gini/CFD/Imagenet, la corréltion est inversée (0,28) --> comment interpréter ça ? 
+
+- matrices de corrélation par paires de couches sur CFD et SCUT et MART/vgg sur R
+
+- Création d'un document récapitulant TOUS les résultats sur le drive
+
+# 02/07/2021
+
+- conférence Hanna Kokko 11h15 https://umontpellier-fr.zoom.us/j/85730904192?pwd=MFNkR0ErdkZIM2V4SW1rQ0xIZ28xZz09
+- conférence esthétique musique 
+
+# 05/07/2021
+
+- avancées sur le programme R
+- talk sur les crocodiles
+- réunion avec sonia pour lui présenter les dernières avancées
+
+# 06/07/2021
+
+- avancées sur le programme R:
+	+ import de la métrique de la pente maximale par image  a partir d'un JSON généré par Python (super lent--> faisable? )
+	+ flexibilisation du programme, non sensible à la variabilité du nom des couches désormais
+
+- commande du pc pour la thèse: 14 pouces, I7, Linux
+- réparation de vggplaces: attention: bug pour le model de smalltest car vmax < 1 mais on s'en fout un peut 
+- lancement des calculs de métriques avec vggplaces
+- le truc sur les points d'inflexion n'était pas adapté
+
+# 07/07/2021
+
+- je bloque un peu sur gompertz, il semblerait qu'il faille définir des paramètres a priori --> on laisse tomber pour le moment
+- calcul de la complexité ( = moyenne des couches) --> assez long temps de calcul, a peu près comme gini
+- on prend que la couche 3 du block 4 pour la complexité, comme dans la publi? 
+
+# 08/07/2021
+# 09/07/2021
+
+# 12/07/2021
+
+- modèle sur les couches avec toutes les combinaisons de paramètres, stockage du R2 dans toutes 
+
+
+# 13/07/2021
+
+- réunion avec Julien et Sonia : cf compte rendu dans /meeting
+
+# 15/07/2021
+
+- test du calcul d'entropie: temps de calcul irréaliste (nécéssité d'une machine beaucoup plus puissante, ou alors de parraléliser mais je ne sais pas faire)
+- z transformation (centrage/reduction) avant le modèle, pour comparer les tailles d'effets
+
+# 16/07/2021
+
+# 19/07/2021
+# 20/07/2021
+# 21/07/2021
+# 22/07/2021
+# 23/07/2021
+
+# 26/07/2021
+# 27/07/2021
+# 28/07/2021
+# 29/07/2021
+# 30/07/2021
+
+# 02/08/2021
+# 03/08/2021
+# 04/08/2021
+# 05/08/2021
+# 06/08/2021
+
+# 09/08/2021
+# 10/08/2021
+# 11/08/2021
+# 12/08/2021
+# 13/08/2021
+
+# 16/08/2021
+# 17/08/2021
+# 18/08/2021
+# 19/08/2021
+# 20/08/2021
+
+# 23/08/2021
+# 24/08/2021
+# 25/08/2021
+# 26/08/2021
+# 27/08/2021
+
+# 30/08/2021
+# 31/08/2021
+# 01/09/2021
+# 02/09/2021
+# 03/09/2021
+
+# 06/09/2021
+# 07/09/2021
+# 08/09/2021
+# 09/09/2021
+# 10/09/2021
+
+# 13/09/2021
+# 14/09/2021
+# 15/09/2021
+# 16/09/2021
+# 17/09/2021
 
 # TODO
 
-## lire
-	- Gompertz: https://benzekry.perso.math.cnrs.fr/DONNEES/models_fitting.html
-	- lire https://www.nature.com/articles/s41467-021-22078-3, regarder l'optimisation des calculs sur les couches intermédiaires https://osf.io/35fmh/
+## coder:	
 
-## coder	
-	- réparer vgg places
-	- tester d'autres mesures que le coeff sur la regression logistique: growth rate, R, T0 (point d'inflexion bas)
-	- comparer le fit de plusieurs fonctions (logit, gompertz) avec la min square error
-	- faire un GLM avec toutes les couches (linéaire, logistique, sparse PLS etc...)
-	- regarder si il y a un effet d'interaction de la complexité sur la sparsité par couche
+### métriques:
 
-### Partie 2 du stage:  
-	- appliquer les conseils de Rufin, cf livre de géron, cf réunion du 08/04
+- refaire les plots des R2 par couche pour gini avc toutes les combinaisons
+- matrice de corrélations croisées entre les BDD (éclairicir ce point)
 
-## faire
+### model:		
+
+- regarder quelles variables restant après le fit du modèle (si ce sont toujours les mêmes indépendament des paramètres
+- birckhoff2: tester en rajoutant les effets simples, normalement c'est la même chose que si on fait l'interaction avec la complexité
+- regarder le sens de l'effet de la complexité (R positif ou négatif)
+- revérifier les effets quadratiques, sur tous les paramètres (avec juste gini flatten sur le modèle avec l'interaction)
+
+## faire:
 	- écrire les fonctions du programme sous forme de formules mathématiques
 	- séléction du modèle: matrices de corrélation sur toutes les variables, quand deux sont a plus de 0,7, on concerve celle qui a le meilleur R2
-	- nouvelles métriques: pas oublier sparsité/complexité (pas dans le même modèle, quoi que ? )
-	- reproduire les résultats de la publi sur la complexité des imagees --> ou attendre que la coautrice les envoie comme elle s'y est engagée
 
-## autres
-	- Matrice de Gram, utilisée pour caractériser le style en transfert de style
+## autres:
+	- papier fondateur fluence: Ralf Reber & Piotr Winkelman
 
 
+## Partie 2 du stage:  
+
+	- SCUT donne les notes par évaluateur, regarder si la variance des notes d'une image est corrélée au pic de sparseness dans les couches
+	Hypothèse: image consensuelle = variance faible = sparseness élevée dès les premières couches
+
+	- appliquer les conseils de Rufin, cf livre de géron, cf réunion du 08/04
 
 
+# THESE
 
+	- Damien Farine est un chercheur qui travaille sur les réseaux sociaux animaux: https://sites.google.com/site/drfarine/publications 
+	- interview d'eveillard sur les réseaux sociaux de plancton
 
 
 

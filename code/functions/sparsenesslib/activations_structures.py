@@ -25,9 +25,11 @@ from numpy.linalg import norm
 import statistics as st
 import scipy
 import sys
+import numpy as np
 #personnal librairies
 sys.path.insert(1,'../../code/functions')
 import sparsenesslib.metrics as metrics
+import sparsenesslib.entropy as etp
 #####################################################################################
 # PROCEDURES/FUNCTIONS:
 #####################################################################################
@@ -44,13 +46,30 @@ def compute_filter(activations, activations_dict,layer,formula,k):
     liste = list(tuple)    
     nb_channels = liste[3] 
 
+
+    #maps is a new shape of activations, to have each mpas for first iteration, useful to compute entropy and complexity 
+    maps = np.copy(activations[layer][0])  
+    maps = np.moveaxis(maps,-1,0)
+
+    entropies = []
+    complexity = []
+
+    print(layer)
+
+    for map in maps:
+        _, _, probabilities = etp.get_ordinal_probabilities(map,2,2)
+        S = etp.Shannon_entropy(probabilities)
+        
+    
+
+
     for each in range(0, nb_channels-1): 
         filter.append([])
         index_row = 0
         for row in activations[layer][0]:
             index_column = 0
-            for column in activations[layer][0][index_row]:            
-                filter[each].append(activations[layer][0][index_row][index_column][each])                 
+            for column in activations[layer][0][index_row]:                            
+                filter[each].append(activations[layer][0][index_row][index_column][each])            
                 index_column += 1
             index_row += 1
 
@@ -89,6 +108,8 @@ def compute_flatten(activations, activations_dict,layer,formula,k):
         activations_dict[layer] = (metrics.gini(arr))
     elif formula == 'kurtosis':
         activations_dict[layer] = (scipy.stats.kurtosis(arr))
+    elif formula == 'mean':
+        activations_dict[layer] = st.mean(arr) 
     else: print('ERROR: formula setting isnt L0, L1, treve-rolls, gini or kurtosis')
 #####################################################################################
 def compute_channel(activations, activations_dict,layer,formula,k):

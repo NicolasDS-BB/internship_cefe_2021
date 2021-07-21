@@ -39,6 +39,7 @@ import pandas
 import matplotlib.pyplot as plt
 import numpy as np
 import json
+import vggplaces.vgg16_places_365 as places
 #personnal librairies
 sys.path.insert(1,'../../code/functions')
 import sparsenesslib.metrics as metrics
@@ -73,7 +74,7 @@ def compute_sparseness_metrics_activations(model, flatten_layers, path, dict_out
         acst.compute_activations(layers, flatten_layers, computation, activations, activations_dict,formula,k)
         dict_output[each] = activations_dict
 #####################################################################################
-def write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, layers, k):    
+def write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, df_inflexions, layers, k):    
     '''
     Writes the results of the performed analyses and their metadata in a structured csv file with 
     - a header line, 
@@ -85,13 +86,45 @@ def write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, l
     today = date.today()
     today = str(today)
 
+    df_metrics = df_metrics.rename(columns = {'input_2': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_3': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_4': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_5': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_6': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_7': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_8': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_9': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_10': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_11': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_12': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_13': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_14': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_15': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_16': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_17': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_18': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_19': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_20': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_21': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_22': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_23': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_24': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_25': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_26': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_27': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_28': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_29': 'input_1'})
+    df_metrics = df_metrics.rename(columns = {'input_30': 'input_1'})
+
     with open(log_path +'_'+bdd+'_'+weight+'_'+metric+'_'+today+'_ANALYSE'+'.csv',"w") as file:            
         #HEADER
         file.write('layer'+';'+'mean_'+str(metric)+';'+'sd_'+str(metric)+';'+'corr_beauty_VS_'+'metric'+';'+'pvalue'+';'+'\n')
         #VALUES for each layer
         for layer in layers:
+
+            '''
             if layer[0:5] == 'input':
-                layer = 'input' + '_' + str(k)
+                layer = 'input' + '_' + str(k)'''
             file.write(layer+';')            
             #mean
             l1 = list(df_metrics[layer])
@@ -120,13 +153,23 @@ def write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, l
         l2 = list(df_scope['rate'])
         reg = linregress(l1,l2)
         coeff = str(reg.rvalue) 
-        file.write('coeff_scope: ;'+coeff+'\n') 
+        pvalue = str(reg.pvalue)
+        file.write('coeff_scope: ;'+coeff+';pvalue:'+pvalue +'\n') 
         #correlation with coeff of logistic regression
         l1 = list(df_reglog['reglog'])        
         l2 = list(df_reglog['rate'])
         reg = linregress(l1,l2)
+        coeff = str(reg.rvalue)
+        pvalue = str(reg.pvalue)    
+        file.write('coeff_reglog: ;'+coeff+';pvalue:'+pvalue +'\n')  
+        #correlation with each inflexions points        
+        l1 = list(df_inflexions['reglog'])        
+        l2 = list(df_inflexions['rate'])
+        reg = linregress(l1,l2)
         coeff = str(reg.rvalue) 
-        file.write('coeff_reglog: ;'+coeff+'\n')  
+        pvalue = str(reg.pvalue)       
+        file.write('coeff_slope_inflexion: ;'+coeff+';pvalue:'+pvalue +'\n') 
+        
 #####################################################################################
 def extract_metrics(bdd,weight,metric, model_name, computer, freqmod,k = 1):
     '''
@@ -202,6 +245,12 @@ def extract_metrics(bdd,weight,metric, model_name, computer, freqmod,k = 1):
             'pool3','conv4_1','conv4_2','conv4_3','pool4','conv5_1','conv5_2','conv5_3','pool5','flatten',
             'fc6/relu','fc7/relu']
             flatten_layers = ['flatten','fc6','fc6/relu','fc7','fc7/relu','fc8','fc8/softmax']
+        elif weight == 'vggplaces':
+            model = places.VGG16_Places365(weights='places')
+            layers = ['input_1','block1_conv1','block1_conv2','block1_pool','block2_conv1', 'block2_conv2','block2_pool',
+            'block3_conv1','block3_conv2','block3_conv3','block3_pool','block4_conv1','block4_conv2','block4_conv3',
+            'block4_pool', 'block5_conv1','block5_conv2','block5_conv3','block5_pool','flatten','fc1', 'fc2']
+            flatten_layers = ['fc1','fc2','flatten']
     elif model_name == 'resnet50':
         if weight == 'imagenet': 
             print('error, model not configured')
@@ -223,6 +272,9 @@ def extract_metrics(bdd,weight,metric, model_name, computer, freqmod,k = 1):
         compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'channel', 'gini', freqmod, k)
     if metric == 'gini_filter':
         compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'filter', 'gini', freqmod, k)
+    if metric == 'mean':
+        compute_sparseness_metrics_activations(model,flatten_layers, images_path,dict_compute_metric, layers, 'flatten', metric, freqmod, k)
+
     
     spm.parse_rates(labels_path, dict_labels)
     df_metrics = spm.create_dataframe(dict_labels, dict_compute_metric) 
@@ -244,6 +296,10 @@ def analyse_metrics(model_name, computer, bdd, weight, metric,k):
             layers = ['input_1','conv1_1','conv1_2','pool1','conv2_1','conv2_2','pool2','conv3_1','conv3_2','conv3_3',
             'pool3','conv4_1','conv4_2','conv4_3','pool4','conv5_1','conv5_2','conv5_3','pool5','flatten',
             'fc6/relu','fc7/relu']
+        elif weight == 'vggplaces':            
+            layers = ['input_1','block1_conv1','block1_conv2','block1_pool','block2_conv1', 'block2_conv2','block2_pool',
+            'block3_conv1','block3_conv2','block3_conv3','block3_pool','block4_conv1','block4_conv2','block4_conv3',
+            'block4_pool', 'block5_conv1','block5_conv2','block5_conv3','block5_pool','flatten','fc1', 'fc2']
     elif model_name == 'resnet50':
         if weight == 'imagenet': 
             print('error, model not configured')
@@ -299,18 +355,22 @@ def analyse_metrics(model_name, computer, bdd, weight, metric,k):
     df_metrics = pandas.DataFrame.from_dict(data)    
     #df_metrics = pandas.read_json(path_or_buf= log_path+'_'+bdd+'_'+weight+'_'+metric+'_'+'_BRUTMETRICS'+'.csv')
     #écriture des histogrammes      
-    metrics.histplot_metrics(layers, df_metrics, bdd, weight, metric, log_path,k)    
+    #metrics.histplot_metrics(layers, df_metrics, bdd, weight, metric, log_path,k)    
     #régression logistique   
-    if metric in ['kurtosis','L0']:        
-        df_metrics = metrics.compress_metric(df_metrics, metric)   
+    if metric in ['kurtosis','L0','mean']:              
+        df_metrics = metrics.compress_metric(df_metrics, metric)  
+        
         
     df_reglog = metrics.reglog(layers, df_metrics, dict_labels) 
     #minimum - maximum     
     df_scope = metrics.minmax(df_metrics,dict_labels)    
     #Gompertz    
     '''df_gompertz = metrics.reg_gompertz()'''
+    #inflexion
+    df_inflexions = metrics.inflexion_points(df_metrics,dict_labels)
+    df_inflexions.to_json(path_or_buf = log_path+'_'+bdd+'_'+weight+'_'+metric+'_'+'_inflexions'+'.csv')
     #écriture du fichier    
 
-    write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, layers, k)    
+    write_file(log_path, bdd, weight, metric, df_metrics, df_reglog, df_scope, df_inflexions ,layers, k)    
 #####################################################################################
 
