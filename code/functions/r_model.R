@@ -12,7 +12,8 @@ library("tibble")
 library("plyr")
 library("corrplot")
 library("FactoMineR")
-setwd("/home/renoult/Bureau/internship_cefe_2021/code/functions")
+library("dplyr")
+setwd("/home/nicolas/Bureau/internship_cefe_2021/code/functions")
 #####################################################################################
 # 3. PARAMETRES: def analyse_metrics(model_name, bdd, weight, metric,k):
 #####################################################################################
@@ -37,6 +38,8 @@ res.pca <- PCA(df[,c(4,7,10,14,18)], graph = TRUE)
 res.pca <- PCA(df[,c(5,8,11,15,19)], graph = TRUE)
 #pool
 res.pca <- PCA(df[,c(6,9,13,17,21)], graph = TRUE)
+
+
 
 
 main_model = function(model_name, bdds, weights, metrics) {
@@ -252,7 +255,7 @@ main_model = function(model_name, bdds, weights, metrics) {
         df_complexity_metrics$pool5<- scale(df_complexity_metrics$pool5)
   
         
-        view(df_complexity_metrics)
+        
         #calcul des r de pearson par couche
         
         correlations <- apply(df_complexity_metrics[,c(1,3:21)],2,cor, y = df_complexity_metrics$rate )
@@ -278,6 +281,7 @@ main_model = function(model_name, bdds, weights, metrics) {
   #####################################################################################
   #5.3. model with layers and interaction with complexity
   #####################################################################################
+        
         model_int_complexity = step(lm(rate ~ 
                                  (
                                   conv1_2+conv1_1+pool1   
@@ -294,12 +298,49 @@ main_model = function(model_name, bdds, weights, metrics) {
                                   +conv5_1+conv5_2+conv5_3+pool5
                                ,data = df_complexity_metrics), trace=0)
         
-        print(summary(model_int_complexity))
+        #print(summary(model_int_complexity))
         
-
-        
-
-      }
+  #####################################################################################
+  #5.4 corrélations simples
+  #####################################################################################
+      
+  #subset avec les dernieres couches de conv
+  
+  df_lastconv = df_complexity_metrics[,c("rate","conv1_2","conv2_2","conv3_3","conv4_3","conv5_3","complexity")]
+              
+  #attractvité/sp max
+  df_lastconv$sp_max = do.call(pmax, df_lastconv[,c("conv1_2","conv2_2","conv3_3","conv4_3","conv5_3")])
+  df_lastconv$sp_min = do.call(pmin, df_lastconv[,c("conv1_2","conv2_2","conv3_3","conv4_3","conv5_3")])
+  df_lastconv$scope = df_lastconv$sp_max - df_lastconv$sp_min
+  #df_lastconv$mean = rowMeans(df_lastconv["conv1_2","conv2_2","conv3_3","conv4_3","conv5_3"])
+  df_lastconv$mean = rowMeans(df_lastconv[,c("conv1_2","conv2_2","conv3_3","conv4_3","conv5_3")])
+  
+  spmax = lm(rate~sp_max, data = df_lastconv)
+  #plot(df_lastconv$rate,df_lastconv$sp_max)
+  print("1:")
+  r_one = cor(df_lastconv$conv1_2, df_lastconv$rate, method = "pearson")
+  rc_one = cor(df_lastconv$conv1_2, df_lastconv$rate, method = "pearson")^2 
+  print("2:")
+  r_two = cor(df_lastconv$conv2_2, df_lastconv$rate, method = "pearson")
+  rc_two = cor(df_lastconv$conv2_2, df_lastconv$rate, method = "pearson")^2 
+  print("3:")
+  r_three = cor(df_lastconv$conv3_3, df_lastconv$rate, method = "pearson")
+  rc_three = cor(df_lastconv$conv3_3, df_lastconv$rate, method = "pearson")^2 
+  print("4:")
+  r_four = cor(df_lastconv$conv4_3, df_lastconv$rate, method = "pearson")
+  rc_four = cor(df_lastconv$conv4_3, df_lastconv$rate, method = "pearson")^2 
+  print("5:")
+  r_five = cor(df_lastconv$conv5_3, df_lastconv$rate, method = "pearson")
+  rc_five = cor(df_lastconv$conv5_3, df_lastconv$rate, method = "pearson")^2 
+  
+  model_multi = step(lm(rate ~ conv1_2+conv2_2+conv3_3+conv4_3+conv5_3 + complexity + (conv1_2+conv2_2+conv3_3+conv4_3+conv5_3):complexity
+                                 ,data = df_lastconv), trace=0)
+  #plot(model_multi)
+  #print(summary(model_multi))
+  
+  barplot(c(r_one,r_two,r_three,r_four,r_five), main = "corrélation")
+  barplot(c(rc_one,rc_two,rc_three,rc_four,rc_five),main = "variance expliquée")
+      } 
     }
   }
   graphics.off()
@@ -333,90 +374,6 @@ main_model = function(model_name, bdds, weights, metrics) {
 
 
 
-
-
-
-
-#####################################################################################
-#5.5. model with alternative birckhoff formula
-#####################################################################################
-
-print(paste('parameters are:',bdd,'-',weight,'-',metric))
-
-model_layers = step(lm(rate ~ 
-                         input_1 
-                       +conv1_2 
-                       +conv1_1 
-                       +pool1   
-                       +conv2_1 
-                       +conv2_2 
-                       +pool2   
-                       +conv3_1 
-                       +conv3_2 
-                       +conv3_3 
-                       +pool3   
-                       +conv4_1 
-                       +conv4_2 
-                       +conv4_3 
-                       +pool4   
-                       +conv5_1 
-                       +conv5_2 
-                       +conv5_3 
-                       +pool5   
-                       ,data = df_birkhoff2), trace=0)
-print(summary(model_layers))
-
-
-#####################################################################################
-#5.1. model with just layers
-#####################################################################################
-model_layers = step(lm(rate ~ 
-                input_1 
-                +conv1_2 
-                +conv1_1 
-                +pool1   
-                +conv2_1 
-                +conv2_2 
-                +pool2   
-                +conv3_1 
-                +conv3_2 
-                +conv3_3 
-                +pool3   
-                +conv4_1 
-                +conv4_2 
-                +conv4_3 
-                +pool4   
-                +conv5_1 
-                +conv5_2 
-                +conv5_3 
-                +pool5   
-                ,data = df_metrics), trace=0)
-print(summary(model_layers))
-#####################################################################################
-#5.2. model with quadratic effect AND interaction effect (several hours computation)
-#####################################################################################
-model_sq_int = step(lm(rate ~ 
-                         (input_1 + input_1_sq 
-                          +conv1_2 + conv1_2_sq
-                          +conv1_1 + conv1_1_sq
-                          +pool1   + pool1_sq
-                          +conv2_1 + conv2_1_sq
-                          +conv2_2 + conv2_2_sq
-                          +pool2   + pool2_sq
-                          +conv3_1 + conv3_1_sq
-                          +conv3_2 + conv3_2_sq
-                          +conv3_3 + conv3_3_sq
-                          +pool3   + pool3_sq
-                          +conv4_1 + conv4_1_sq
-                          +conv4_2 + conv4_2_sq
-                          +conv4_3 + conv4_3_sq
-                          +pool4   + pool4_sq
-                          +conv5_1 + conv5_1_sq
-                          +conv5_2 + conv5_2_sq
-                          +conv5_3 + conv5_3_sq
-                          +pool5   + pool5_sq)^2
-                       ,data = df_sq_metrics), trace=0)
-print(summary(model_sq_int))
 
 
 
